@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>कार्य और समय - मॉक टेस्ट 1</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            border-bottom: 3px solid #1a73e8;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .question {
+            background-color: #e8f0fe;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            /* प्रश्न का उत्तर देने के बाद इसे स्थिर रखें */
+            pointer-events: auto;
+        }
+        .question p {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        .options {
+            list-style-type: none;
+            padding: 0;
+        }
+        .options li {
+            background-color: #f9f9f9;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .options li:hover {
+            background-color: #e0eaf7;
+        }
+        /* Style for correct answer */
+        .options li.correct {
+            background-color: #c8e6c9; /* Light green */
+            color: #2e7d32; /* Dark green text */
+            font-weight: bold;
+        }
+        /* Style for incorrect answer */
+        .options li.incorrect {
+            background-color: #ffcdd2; /* Light red */
+            color: #c62828; /* Dark red text */
+            font-weight: bold;
+        }
+        .back-button {
+            display: inline-block;
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover {
+            background-color: #1a2a3a;
+        }
+        #result-container {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e3f2fd;
+            border: 2px solid #90caf9;
+            border-radius: 10px;
+            display: none; /* Hide initially */
+        }
+        #result-container h2 {
+            color: #1565c0;
+            margin-top: 0;
+        }
+        #submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        #submit-btn:hover {
+            background-color: #388e3c;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>कार्य और समय - मॉक टेस्ट 1</h1>
+
+        <div class="question" id="q1">
+            <p>1. A, एक काम को 10 दिन में कर सकता है और B उसी काम को 15 दिन में कर सकता है। दोनों मिलकर उस काम को कितने दिन में पूरा करेंगे?</p>
+            <ul class="options">
+                <li data-q="1" data-opt="A">A. 5 दिन</li>
+                <li data-q="1" data-opt="B">B. 6 दिन</li>
+                <li data-q="1" data-opt="C">C. 8 दिन</li>
+                <li data-q="1" data-opt="D">D. 12 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q2">
+            <p>2. राम और श्याम मिलकर एक काम 8 दिन में करते हैं। यदि राम अकेला उस काम को 12 दिन में कर सकता है, तो श्याम अकेला उस काम को कितने दिन में करेगा?</p>
+            <ul class="options">
+                <li data-q="2" data-opt="A">A. 20 दिन</li>
+                <li data-q="2" data-opt="B">B. 24 दिन</li>
+                <li data-q="2" data-opt="C">C. 16 दिन</li>
+                <li data-q="2" data-opt="D">D. 18 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q3">
+            <p>3. A, B, और C एक काम को क्रमशः 10, 12, और 15 दिन में पूरा कर सकते हैं। तीनों मिलकर उस काम को कितने दिन में पूरा करेंगे?</p>
+            <ul class="options">
+                <li data-q="3" data-opt="A">A. 4 दिन</li>
+                <li data-q="3" data-opt="B">B. 5 दिन</li>
+                <li data-q="3" data-opt="C">C. 6 दिन</li>
+                <li data-q="3" data-opt="D">D. 3 दिन</li>
+            </ul>
+        </div>
+        
+        <div class="question" id="q4">
+            <p>4. 10 आदमी एक काम को 12 दिन में पूरा कर सकते हैं। उसी काम को 6 दिन में पूरा करने के लिए कितने आदमियों की आवश्यकता होगी?</p>
+            <ul class="options">
+                <li data-q="4" data-opt="A">A. 15 आदमी</li>
+                <li data-q="4" data-opt="B">B. 20 आदमी</li>
+                <li data-q="4" data-opt="C">C. 18 आदमी</li>
+                <li data-q="4" data-opt="D">D. 24 आदमी</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q5">
+            <p>5. A, किसी काम का 1/3 भाग 5 दिन में करता है और B उसी काम का 2/5 भाग 10 दिन में करता है। A और B मिलकर उस काम को कितने दिन में करेंगे?</p>
+            <ul class="options">
+                <li data-q="5" data-opt="A">A. 9 3/8 दिन</li>
+                <li data-q="5" data-opt="B">B. 8 4/7 दिन</li>
+                <li data-q="5" data-opt="C">C. 10 दिन</li>
+                <li data-q="5" data-opt="D">D. 12 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q6">
+            <p>6. यदि 6 आदमी और 8 लड़के एक काम को 10 दिन में कर सकते हैं, और 26 आदमी और 48 लड़के उसी काम को 2 दिन में कर सकते हैं, तो 15 आदमी और 20 लड़के उसी काम को कितने दिन में पूरा करेंगे?</p>
+            <ul class="options">
+                <li data-q="6" data-opt="A">A. 4 दिन</li>
+                <li data-q="6" data-opt="B">B. 5 दिन</li>
+                <li data-q="6" data-opt="C">C. 6 दिन</li>
+                <li data-q="6" data-opt="D">D. 7 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q7">
+            <p>7. A, B से दोगुना अच्छा कारीगर है और दोनों मिलकर एक काम को 18 दिन में पूरा करते हैं। A अकेला उस काम को कितने दिन में पूरा करेगा?</p>
+            <ul class="options">
+                <li data-q="7" data-opt="A">A. 27 दिन</li>
+                <li data-q="7" data-opt="B">B. 24 दिन</li>
+                <li data-q="7" data-opt="C">C. 30 दिन</li>
+                <li data-q="7" data-opt="D">D. 36 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q8">
+            <p>8. 12 आदमी या 18 महिलाएँ एक खेत को 14 दिन में काट सकती हैं। 8 आदमी और 16 महिलाएँ उस खेत को कितने दिन में काटेंगी?</p>
+            <ul class="options">
+                <li data-q="8" data-opt="A">A. 9 दिन</li>
+                <li data-q="8" data-opt="B">B. 10 दिन</li>
+                <li data-q="8" data-opt="C">C. 8 दिन</li>
+                <li data-q="8" data-opt="D">D. 6 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q9">
+            <p>9. A और B मिलकर एक काम को 12 दिन में, B और C 15 दिन में, और C और A 20 दिन में पूरा कर सकते हैं। वे तीनों मिलकर उस काम को कितने दिन में पूरा करेंगे?</p>
+            <ul class="options">
+                <li data-q="9" data-opt="A">A. 10 दिन</li>
+                <li data-q="9" data-opt="B">B. 12 दिन</li>
+                <li data-q="9" data-opt="C">C. 8 दिन</li>
+                <li data-q="9" data-opt="D">D. 15 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q10">
+            <p>10. A एक काम को 20 दिन में कर सकता है। उसने 5 दिन काम किया और फिर काम छोड़ दिया। B ने शेष काम को 15 दिन में पूरा किया। B अकेला उस काम को कितने दिन में पूरा करेगा?</p>
+            <ul class="options">
+                <li data-q="10" data-opt="A">A. 20 दिन</li>
+                <li data-q="10" data-opt="B">B. 25 दिन</li>
+                <li data-q="10" data-opt="C">C. 18 दिन</li>
+                <li data-q="10" data-opt="D">D. 15 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q11">
+            <p>11. A और B मिलकर एक दीवार को 10 दिन में बना सकते हैं। A अकेला 15 दिन में बना सकता है। अगर B ने 5 दिन तक काम किया, तो शेष काम को A को पूरा करने में कितने दिन लगेंगे?</p>
+            <ul class="options">
+                <li data-q="11" data-opt="A">A. 12 दिन</li>
+                <li data-q="11" data-opt="B">B. 10 दिन</li>
+                <li data-q="11" data-opt="C">C. 15 दिन</li>
+                <li data-q="11" data-opt="D">D. 8 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q12">
+            <p>12. 12 आदमी एक काम को 18 दिन में पूरा करते हैं। 6 दिन बाद 4 आदमी काम छोड़ देते हैं। शेष काम को पूरा करने में अब कितने दिन लगेंगे?</p>
+            <ul class="options">
+                <li data-q="12" data-opt="A">A. 15 दिन</li>
+                <li data-q="12" data-opt="B">B. 16 दिन</li>
+                <li data-q="12" data-opt="C">C. 18 दिन</li>
+                <li data-q="12" data-opt="D">D. 20 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q13">
+            <p>13. A, B से 40% अधिक कुशल है। यदि B अकेला एक काम को 28 दिन में करता है, तो A अकेला उस काम को कितने दिन में करेगा?</p>
+            <ul class="options">
+                <li data-q="13" data-opt="A">A. 15 दिन</li>
+                <li data-q="13" data-opt="B">B. 20 दिन</li>
+                <li data-q="13" data-opt="C">C. 25 दिन</li>
+                <li data-q="13" data-opt="D">D. 18 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q14">
+            <p>14. 50 आदमी 200 मीटर लंबी दीवार को 10 दिन में बना सकते हैं। 40 आदमी 400 मीटर लंबी दीवार को कितने दिन में बना सकते हैं?</p>
+            <ul class="options">
+                <li data-q="14" data-opt="A">A. 20 दिन</li>
+                <li data-q="14" data-opt="B">B. 25 दिन</li>
+                <li data-q="14" data-opt="C">C. 15 दिन</li>
+                <li data-q="14" data-opt="D">D. 30 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q15">
+            <p>15. A और B मिलकर एक काम को 30 दिन में करते हैं। A अकेला 20 दिन तक काम करता है और फिर B अकेला शेष काम को 40 दिन में पूरा करता है। B अकेला पूरा काम कितने दिन में करेगा?</p>
+            <ul class="options">
+                <li data-q="15" data-opt="A">A. 60 दिन</li>
+                <li data-q="15" data-opt="B">B. 50 दिन</li>
+                <li data-q="15" data-opt="C">C. 45 दिन</li>
+                <li data-q="15" data-opt="D">D. 55 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q16">
+            <p>16. A, B की तुलना में 3 गुना तेज है। यदि A, B से 30 दिन कम में काम पूरा करता है, तो A और B मिलकर काम को कितने दिन में पूरा करेंगे?</p>
+            <ul class="options">
+                <li data-q="16" data-opt="A">A. 11 1/4 दिन</li>
+                <li data-q="16" data-opt="B">B. 10 1/2 दिन</li>
+                <li data-q="16" data-opt="C">C. 12 दिन</li>
+                <li data-q="16" data-opt="D">D. 15 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q17">
+            <p>17. 10 पुरुष या 12 महिलाएँ एक काम को 10 दिन में कर सकती हैं। 5 पुरुष और 6 महिलाएँ उस काम को कितने दिन में पूरा करेंगे?</p>
+            <ul class="options">
+                <li data-q="17" data-opt="A">A. 10 दिन</li>
+                <li data-q="17" data-opt="B">B. 8 दिन</li>
+                <li data-q="17" data-opt="C">C. 9 दिन</li>
+                <li data-q="17" data-opt="D">D. 12 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q18">
+            <p>18. A और B ने मिलकर एक काम 20 दिन में पूरा किया। B और C ने 30 दिन में, और C और A ने 40 दिन में पूरा किया। C अकेला उस काम को कितने दिन में पूरा करेगा?</p>
+            <ul class="options">
+                <li data-q="18" data-opt="A">A. 480/13 दिन</li>
+                <li data-q="18" data-opt="B">B. 240/13 दिन</li>
+                <li data-q="18" data-opt="C">C. 120/13 दिन</li>
+                <li data-q="18" data-opt="D">D. 60 दिन</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q19">
+            <p>19. A किसी काम को 20 दिन में और B 30 दिन में कर सकता है। वे 10 दिन तक एक साथ काम करते हैं। शेष काम का कितना हिस्सा बचा है?</p>
+            <ul class="options">
+                <li data-q="19" data-opt="A">A. 1/6</li>
+                <li data-q="19" data-opt="B">B. 1/4</li>
+                <li data-q="19" data-opt="C">C. 1/2</li>
+                <li data-q="19" data-opt="D">D. 1/3</li>
+            </ul>
+        </div>
+
+        <div class="question" id="q20">
+            <p>20. 20 आदमी 25 दिन में एक काम पूरा करते हैं। काम शुरू होने के 10 दिन बाद 10 और आदमी काम में शामिल होते हैं। शेष काम को पूरा करने में कितने दिन लगेंगे?</p>
+            <ul class="options">
+                <li data-q="20" data-opt="A">A. 5 दिन</li>
+                <li data-q="20" data-opt="B">B. 10 दिन</li>
+                <li data-q="20" data-opt="C">C. 8 दिन</li>
+                <li data-q="20" data-opt="D">D. 12 दिन</li>
+            </ul>
+        </div>
+
+        <button id="submit-btn">सबमिट करें और स्कोर देखें</button>
+
+        <div id="result-container">
+            <h2>आपका स्कोर: <span id="score">0</span> / 20</h2>
+        </div>
+
+        <a href="index.html" class="back-button">← वापस जाएँ</a>
+    </div>
+
+    <script>
+        const correctAnswers = {
+            q1: 'B', q2: 'B', q3: 'A', q4: 'B', q5: 'A',
+            q6: 'A', q7: 'A', q8: 'A', q9: 'A', q10: 'A',
+            q11: 'A', q12: 'C', q13: 'B', q14: 'B', q15: 'A',
+            q16: 'A', q17: 'A', q18: 'A', q19: 'A', q20: 'B'
+        };
+        
+        let score = 0;
+        const selectedAnswers = {};
+        const questions = document.querySelectorAll('.question');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultContainer = document.getElementById('result-container');
+        const scoreSpan = document.getElementById('score');
+
+        questions.forEach(question => {
+            const options = question.querySelectorAll('.options li');
+            options.forEach(option => {
+                option.addEventListener('click', () => {
+                    // Remove 'selected' class from other options in the same question
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    // Add 'selected' class to the clicked option
+                    option.classList.add('selected');
+
+                    const questionId = option.dataset.q;
+                    const selectedOption = option.dataset.opt;
+                    selectedAnswers[questionId] = selectedOption;
+                });
+            });
+        });
+
+        submitBtn.addEventListener('click', () => {
+            let correctCount = 0;
+            questions.forEach(question => {
+                const questionId = question.id;
+                const userAnswer = selectedAnswers[questionId];
+                const correctAnswer = correctAnswers[questionId.replace('q', '')];
+                const options = question.querySelectorAll('.options li');
+
+                options.forEach(option => {
+                    const optionValue = option.dataset.opt;
+                    if (optionValue === correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                    if (optionValue === userAnswer && userAnswer !== correctAnswer) {
+                        option.classList.add('incorrect');
+                    }
+                    // Disable all options after submission
+                    option.style.pointerEvents = 'none';
+                });
+
+                if (userAnswer === correctAnswer) {
+                    correctCount++;
+                }
+            });
+
+            score = correctCount;
+            scoreSpan.textContent = score;
+            resultContainer.style.display = 'block';
+            submitBtn.style.display = 'none';
+        });
+    </script>
+
+</body>
+</html>
