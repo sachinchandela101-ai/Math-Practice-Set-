@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mock Test</title>
+  <style>
+    :root {
+      --primary: #1976d2;
+      --light-blue: #e3f2fd;
+      --answered: #2196f3;
+      --current: #ff9800;
+      --not-visited: #9e9e9e;
+      --visited: #ffffff;
+      --review: #9c27b0; /* Purple for review */
+    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f8f9fa; }
+    header {
+      background: var(--primary); color: white;
+      padding: 10px 15px; display: flex;
+      justify-content: space-between; align-items: center;
+    }
+    header h1 { margin: 0; font-size: 18px; }
+    .tabs { display: flex; border-bottom: 1px solid #ccc; }
+    .tabs button { flex: 1; padding: 10px; border: none; background: #f1f1f1; cursor: pointer; }
+    .tabs button.active { background: white; border-bottom: 2px solid var(--primary); font-weight: bold; }
+    .tab-content { display: none; padding: 15px; }
+    .tab-content.active { display: block; }
+    .layout { display: flex; gap: 15px; }
+    .palette {
+      width: 140px; background: white; padding: 10px;
+      border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex; flex-wrap: wrap; gap: 8px; height: fit-content;
+    }
+    .palette button {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: none; font-weight: bold; cursor: pointer; color: black;
+    }
+    .legend { margin-top: 12px; font-size: 13px; }
+    .legend div { display: flex; align-items: center; margin-bottom: 5px; }
+    .legend span {
+      display: inline-block; width: 18px; height: 18px;
+      border-radius: 50%; margin-right: 6px; border: 1px solid #000;
+    }
+    .question-area { flex: 1; }
+    .question {
+      background: white; padding: 15px;
+      border-radius: 8px; margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .options div {
+      padding: 8px; margin: 5px 0;
+      border: 1px solid #ccc; border-radius: 5px; cursor: pointer;
+    }
+    .options div.selected { background: var(--light-blue); border-color: var(--primary); }
+    .question-footer {
+      display: flex; justify-content: space-between; margin-top: 10px;
+    }
+    .question-footer button {
+      flex: 1; margin: 0 5px; padding: 10px;
+      border: none; border-radius: 5px;
+      cursor: pointer; font-weight: bold;
+    }
+    .prev-btn { background: #9e9e9e; color: white; }
+    .next-btn { background: var(--primary); color: white; }
+    .review-btn { background: var(--review); color: white; }
+    /* Modal */
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); justify-content: center; align-items: center;
+    }
+    .modal-content {
+      background: white; padding: 20px;
+      border-radius: 8px; width: 250px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mock Test</h1>
+    <div id="timer">05:00</div>
+    <button id="menuBtn">☰</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="test">Test</button>
+    <button class="tab-btn" data-tab="solutions" disabled>Solutions</button>
+    <button class="tab-btn" data-tab="analysis" disabled>Analysis</button>
+  </div>
+
+  <div id="test" class="tab-content active">
+    <div class="layout">
+      <div>
+        <div class="palette" id="palette"></div>
+        <div class="legend">
+          <div><span style="background:var(--answered)"></span> Answered</div>
+          <div><span style="background:var(--review)"></span> Marked for Review</div>
+          <div><span style="background:var(--visited)"></span> Visited</div>
+          <div><span style="background:var(--not-visited)"></span> Not Visited</div>
+          <div><span style="background:var(--current)"></span> Current</div>
+        </div>
+      </div>
+      <div class="question-area">
+        <div id="question-container"></div>
+        <div class="question-footer">
+          <button id="prev-btn" class="prev-btn">Previous</button>
+          <button id="review-btn" class="review-btn">Mark for Review</button>
+          <button id="next-btn" class="next-btn">Save & Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="solutions" class="tab-content"></div>
+  <div id="analysis" class="tab-content"></div>
+
+  <!-- Menu Modal -->
+  <div id="menuModal" class="modal">
+    <div class="modal-content">
+      <h3>Menu</h3>
+      <button id="submit-btn-menu" style="margin-top:10px;background:green;color:white;padding:10px;border:none;border-radius:5px;width:100%;">Submit Test</button>
+      <button id="closeMenu" style="margin-top:10px;padding:10px;width:100%;">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      { q: "What is the capital of India?", options: ["New Delhi","Mumbai","Kolkata","Chennai"], answer: "New Delhi" },
+      { q: "Which planet is known as the Red Planet?", options: ["Mars","Venus","Jupiter","Saturn"], answer: "Mars" },
+      { q: "Who wrote the National Anthem of India?", options: ["Rabindranath Tagore","Mahatma Gandhi","Bankim Chandra Chatterjee","Subhash Chandra Bose"], answer: "Rabindranath Tagore" }
+    ];
+
+    let current = 0;
+    let selectedAnswers = {};
+    let visited = Array(questions.length).fill(false);
+    let reviewMarked = Array(questions.length).fill(false);
+
+    const questionContainer = document.getElementById("question-container");
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const reviewBtn = document.getElementById("review-btn");
+    const palette = document.getElementById("palette");
+
+    function renderPalette(){
+      palette.innerHTML = "";
+      questions.forEach((q,i)=>{
+        let color;
+        if(i===current) color = "var(--current)";
+        else if(reviewMarked[i]) color = "var(--review)";
+        else if(selectedAnswers[i]) color = "var(--answered)";
+        else if(visited[i]) color = "var(--visited)";
+        else color = "var(--not-visited)";
+        const btn = document.createElement("button");
+        btn.textContent = i+1;
+        btn.style.background = color;
+        btn.addEventListener("click", ()=>{ current=i; loadQuestion(current); });
+        palette.appendChild(btn);
+      });
+    }
+
+    function loadQuestion(index){
+      visited[index] = true;
+      const q = questions[index];
+      questionContainer.innerHTML = `
+        <div class="question">
+          <h3>Q${index+1}. ${q.q}</h3>
+          <div class="options">
+            ${q.options.map((opt,i)=>`
+              <div class="option ${selectedAnswers[index]===opt?'selected':''}" data-opt="${opt}">${i+1}. ${opt}</div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+      document.querySelectorAll(".option").forEach(opt=>{
+        opt.addEventListener("click", ()=>{
+          selectedAnswers[index] = opt.dataset.opt;
+          reviewMarked[index] = false; // selecting answer removes review mark
+          loadQuestion(index);
+        });
+      });
+      prevBtn.style.display = index===0?"none":"inline-block";
+      nextBtn.textContent = index===questions.length-1?"Submit":"Save & Next";
+      renderPalette();
+    }
+
+    prevBtn.addEventListener("click", ()=>{
+      if(current>0){ current--; loadQuestion(current); }
+    });
+
+    nextBtn.addEventListener("click", ()=>{
+      if(current===questions.length-1){
+        submitTest();
+      } else {
+        current++;
+        loadQuestion(current);
+      }
+    });
+
+    reviewBtn.addEventListener("click", ()=>{
+      reviewMarked[current] = true;
+      if(current < questions.length-1){
+        current++;
+        loadQuestion(current);
+      } else {
+        submitTest();
+      }
+    });
+
+    function submitTest(){
+      if(confirm("Submit test?")){
+        showSolutions();
+        showAnalysis();
+        document.querySelector('[data-tab="solutions"]').disabled = false;
+        document.querySelector('[data-tab="analysis"]').disabled = false;
+        switchTab("analysis");
+      }
+    }
+
+    function showSolutions(){
+      const solDiv = document.getElementById("solutions");
+      solDiv.innerHTML = questions.map((q,i)=>`
+        <p><b>Q${i+1}:</b> ${q.q}<br>
+        <b>Correct:</b> ${q.answer}<br>
+        <b>Your:</b> ${selectedAnswers[i]||"Not Answered"} ${reviewMarked[i]?"(Marked for Review)":""}</p>
+      `).join("");
+    }
+
+    function showAnalysis(){
+      const total = questions.length;
+      let correct = 0, wrong=0, notAns=0;
+      questions.forEach((q,i)=>{
+        if(!selectedAnswers[i]) notAns++;
+        else if(selectedAnswers[i]===q.answer) correct++;
+        else wrong++;
+      });
+      const anaDiv = document.getElementById("analysis");
+      anaDiv.innerHTML = `
+        <h3>Analysis</h3>
+        <p>Total: ${total}</p>
+        <p>Correct: ${correct}</p>
+        <p>Wrong: ${wrong}</p>
+        <p>Not Answered: ${notAns}</p>
+      `;
+    }
+
+    // Tabs
+    document.querySelectorAll(".tab-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        if(btn.disabled) return;
+        switchTab(btn.dataset.tab);
+      });
+    });
+    function switchTab(tab){
+      document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add("active");
+      document.getElementById(tab).classList.add("active");
+    }
+
+    // Menu
+    const modal = document.getElementById("menuModal");
+    document.getElementById("menuBtn").addEventListener("click", ()=>modal.style.display="flex");
+    document.getElementById("closeMenu").addEventListener("click", ()=>modal.style.display="none");
+    document.getElementById("submit-btn-menu").addEventListener("click", ()=>{
+      submitTest();
+      modal.style.display="none";
+    });
+
+    // Timer
+    let time=300;
+    const timerEl=document.getElementById("timer");
+    const timer=setInterval(()=>{
+      let m=Math.floor(time/60), s=time%60;
+      timerEl.textContent=`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+      if(time<=0){clearInterval(timer); submitTest();}
+      time--;
+    },1000);
+
+    // Init
+    loadQuestion(current);
+  </script>
+</body>
+</html>
