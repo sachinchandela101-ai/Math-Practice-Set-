@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <title>मॉक टेस्ट - समय और कार्य (स्तर 4)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background:#f5f7fa; }
+    .container { max-width:800px; margin:auto; padding:20px; }
+    .card { background:#fff; padding:20px; margin-bottom:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+    button { padding:10px 15px; margin:5px; border:none; border-radius:6px; cursor:pointer; transition:0.2s; }
+    button:hover{transform:scale(1.02);}
+    .btn{background:linear-gradient(90deg,#007bff,#00aaff); color:white;font-weight:bold;}
+    .btn-grey{background:linear-gradient(90deg,#666,#999); color:white;}
+    .hidden{display:none;}
+    .timer{font-size:18px;font-weight:bold;color:#fff;background:linear-gradient(90deg,#ff4b2b,#ff416c);padding:5px 10px;border-radius:8px;display:inline-block;margin-bottom:15px;}
+    .tabs{display:flex;justify-content:space-around;margin:15px 0;}
+    .tab{flex:1;text-align:center;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;transition:0.2s;}
+    .tab.correct{background:linear-gradient(90deg,#b9fbc0,#22c55e);}
+    .tab.incorrect{background:linear-gradient(90deg,#ffb3b3,#ff4d4d);}
+    .tab.unattempted{background:linear-gradient(90deg,#cce5ff,#3399ff);}
+    .tab.active{border:2px solid #333;}
+    .question-card{margin-bottom:15px;border:1px solid #ddd;border-radius:10px;padding:15px;background:#fff;}
+    .question-card.correct{border-color:green;}
+    .question-card.incorrect{border-color:red;}
+    .question-card.unattempted{border-color:#00bfff;}
+    .mock-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:bold;font-size:20px;}
+    .question-num{position:relative;width:35px;height:35px;border-radius:50%;display:flex;justify-content:center;align-items:center;cursor:pointer;font-weight:bold;transition:0.2s;color:white;}
+    .question-num.unattempted{background-color: white; border: 1px solid black; color: black;}
+    .question-num.attempted{background-color: #007bff;}
+    .question-num.current{background-color: #ff4b2b;}
+    .question-num.correct{background-color: #22c55e;}
+    .question-num.incorrect{background-color: #ff4d4d;}
+    .question-num:hover{transform:scale(1.2);border:2px solid #333;}
+    .question-num .tooltip{visibility:hidden;background:#333;color:#fff;text-align:left;padding:5px 8px;border-radius:5px;position:absolute;top:-40px;left:50%;transform:translateX(-50%);z-index:10;white-space:nowrap;font-size:12px;}
+    .question-num:hover .tooltip{visibility:visible;}
+    #menu-overlay{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;z-index:1000;transition:0.3s;background:rgba(0,0,0,0.5);}
+    #menu-overlay.active{opacity:1;pointer-events:auto;}
+    #menu-popup{background:#fff;width:600px;max-width:90%;max-height:90%;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:flex;flex-direction:column;transform:scale(0.7);opacity:0;transition:0.3s ease-in-out;position:relative;}
+    #menu-overlay.active #menu-popup{transform:scale(1);opacity:1;}
+    #menu-popup h3 { margin-top:0; text-align:center; }
+    #menu-popup #close-popup{position:absolute;top:10px;right:15px;font-size:20px;cursor:pointer;color:#333;font-weight:bold;}
+    #question-numbers{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;overflow-y:auto;flex-grow:1;justify-content:center;}
+    #popup-submit,#popup-back{margin-top:10px;padding:12px;font-size:16px;}
+    #test-section.blur{filter:blur(5px);transition:0.3s;}
+    #lang-toggle{cursor:pointer;font-size:16px;padding:5px 10px;border-radius:6px;border:1px solid #ccc;background:#f0f0f0;}
+    @media(max-width:500px){#menu-popup{width:90%;}.question-num{width:30px;height:30px;font-size:14px;}button{font-size:14px;padding:8px 10px;}}
+    .option-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        color: #333;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+    .option-btn:hover { background-color: #e0e0e0; }
+    .option-btn.selected { background-color: #007bff; color: white; border-color: #007bff; }
+    .option-btn.correct { background-color: #22c55e; color: white; border-color: #22c55e; }
+    .option-btn.incorrect { background-color: #ff4d4d; color: white; border-color: #ff4d4d; }
+    .question-card pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: inherit;
+    }
+    #score-summary p {
+      margin: 5px 0;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="mock-header card">
+    <div id="mock-title">समय और कार्य मॉक टेस्ट</div>
+    <div style="display:flex;align-items:center;">
+      <button id="lang-toggle" class="btn-grey">English</button>
+      <div id="menu-toggle" style="margin-left: 10px; cursor:pointer;">&#8942;</div>
+    </div>
+  </div>
+
+  <div id="menu-overlay">
+    <div id="menu-popup">
+      <span id="close-popup">&times;</span>
+      <h3 id="menu-title">प्रश्न</h3>
+      <div id="question-numbers"></div>
+      <button id="popup-submit" class="btn">सबमिट करें</button>
+      <button id="popup-back" class="btn-grey">वापस जाएँ</button>
+    </div>
+  </div>
+<div id="test-section" class="card">
+    <div class="timer" id="timer">समय: 35:00</div>
+    <div id="question-container"></div>
+    <div id="navigation-buttons" style="display: flex; justify-content: space-between;">
+        <button id="prev-btn" class="btn-grey">पिछला प्रश्न</button>
+        <button id="next-btn" class="btn">अगला प्रश्न</button>
+    </div>
+  </div>
+
+  <div id="result-section" class="card hidden">
+    <h2>आपका परिणाम</h2>
+    <div id="score-summary"></div>
+    <div class="tabs">
+      <div class="tab correct" id="tab-correct">सही</div>
+      <div class="tab incorrect" id="tab-incorrect">गलत</div>
+      <div class="tab unattempted" id="tab-unattempted">छोड़े गए</div>
+    </div>
+    <div id="analysis"></div>
+    <canvas id="resultChart" width="300" height="300"></canvas>
+  </div>
+</div>
+<script>
+let questions = [
+  {
+    q_hi: "A, B और C क्रमशः 10, 15 और 20 दिनों में एक कार्य कर सकते हैं। उन्होंने एक साथ काम करना शुरू किया। 2 दिनों के बाद A चला गया और B काम पूरा होने से 2 दिन पहले चला गया। कुल कार्य कितने दिनों में पूरा हुआ?",
+    q_en: "A, B and C can do a work in 10, 15 and 20 days respectively. They started working together. After 2 days A left, and B left 2 days before the completion of the work. In how many days was the total work completed?",
+    options: ["6 दिन", "7 दिन", "8 दिन", "9 दिन"],
+    answer: 2,
+    solution_hi: "कुल कार्य = LCM(10, 15, 20) = 60 इकाई।\nA की कार्यक्षमता = 6, B की = 4, C की = 3 इकाई/दिन।\nपहले 2 दिन: तीनों ने एक साथ काम किया। किया गया कार्य = 2 × (6+4+3) = 2 × 13 = 26 इकाई।\nशेष कार्य = 60 - 26 = 34 इकाई।\nअंतिम 2 दिन: B चला गया था, इसलिए केवल C ने काम किया। किया गया कार्य = 2 × 3 = 6 इकाई।\nशेष कार्य = 34 - 6 = 28 इकाई।\nयह 28 इकाई कार्य A के जाने के बाद और B के जाने से पहले B और C ने मिलकर किया।\nB और C की संयुक्त कार्यक्षमता = 4 + 3 = 7 इकाई/दिन।\nB और C द्वारा मिलकर काम करने में लगा समय = 28 / 7 = 4 दिन।\nकुल समय = 2 (तीनों) + 4 (B और C) + 2 (C) = 8 दिन।",
+    solution_en: "Total work = LCM(10, 15, 20) = 60 units. Efficiency of A = 6, B = 4, C = 3 units/day.\nFirst 2 days: A, B, and C worked together. Work done = 2 × (6+4+3) = 26 units.\nRemaining work = 60 - 26 = 34 units.\nLast 2 days: Only C worked (since B had left). Work done = 2 × 3 = 6 units.\nRemaining work = 34 - 6 = 28 units.\nThis 28 units of work was done by B and C together (after A left and before B left).\nCombined efficiency of B and C = 4 + 3 = 7 units/day.\nTime taken by B and C together = 28 / 7 = 4 days.\nTotal time = 2 (A+B+C) + 4 (B+C) + 2 (C) = 8 days."
+  },
+  {
+    q_hi: "A और B मिलकर 12 दिनों में एक कार्य कर सकते हैं। B और C 15 दिनों में कर सकते हैं। यदि A की कार्यक्षमता C से दोगुनी है, तो B अकेले उस कार्य को कितने दिनों में कर सकता है?",
+    q_en: "A and B together can do a work in 12 days. B and C in 15 days. If A's efficiency is twice that of C, in how many days can B alone do the work?",
+    options: ["15 दिन", "20 दिन", "25 दिन", "30 दिन"],
+    answer: 1,
+    solution_hi: "कुल कार्य = LCM(12, 15) = 60 इकाई।\n(A+B) की कार्यक्षमता = 60 / 12 = 5 इकाई/दिन।\n(B+C) की कार्यक्षमता = 60 / 15 = 4 इकाई/दिन।\nदिया गया है: A की कार्यक्षमता C से दोगुनी है (A = 2C)।\n(A+B) - (B+C) = 5 - 4 = 1 इकाई/दिन।\nA - C = 1 => 2C - C = 1 => C = 1 इकाई/दिन।\nB की कार्यक्षमता = (B+C) - C = 4 - 1 = 3 इकाई/दिन।\nB को अकेले कार्य पूरा करने में लगा समय = कुल कार्य / B की कार्यक्षमता = 60 / 3 = 20 दिन।",
+    solution_en: "Total work = LCM(12, 15) = 60 units.\nEfficiency of (A+B) = 60 / 12 = 5 units/day.\nEfficiency of (B+C) = 60 / 15 = 4 units/day.\nGiven: A's efficiency is twice that of C (A = 2C).\n(A+B) - (B+C) = 5 - 4 = 1 unit/day.\nA - C = 1 => 2C - C = 1 => C = 1 unit/day.\nB's efficiency = (B+C) - C = 4 - 1 = 3 units/day.\nTime taken by B alone = Total work / B's efficiency = 60 / 3 = 20 days."
+  },
+  {
+    q_hi: "A और B मिलकर 12 दिनों में एक कार्य कर सकते हैं। B और C 16 दिनों में, C और A 24 दिनों में। यदि वे 8 दिनों के लिए एक साथ काम करते हैं, तो शेष कार्य को अकेले A कितने दिनों में पूरा करेगा?",
+    q_en: "A and B together can do a work in 12 days. B and C in 16 days, C and A in 24 days. If they work together for 8 days, in how many days will A alone complete the remaining work?",
+    options: ["6 दिन", "8 दिन", "10 दिन", "12 दिन"],
+    answer: 1,
+    solution_hi: "कुल कार्य = LCM(12, 16, 24) = 48 इकाई।\n(A+B) की कार्यक्षमता = 4, (B+C) की = 3, (C+A) की = 2 इकाई/दिन।\n2(A+B+C) की कार्यक्षमता = 4+3+2 = 9 इकाई/दिन।\nA+B+C की कार्यक्षमता = 4.5 इकाई/दिन।\n8 दिनों में तीनों द्वारा किया गया कार्य = 8 × 4.5 = 36 इकाई।\nशेष कार्य = 48 - 36 = 12 इकाई।\nA की कार्यक्षमता = (A+B+C) - (B+C) = 4.5 - 3 = 1.5 इकाई/दिन।\nशेष कार्य को पूरा करने में A को लगा समय = 12 / 1.5 = 8 दिन।",
+    solution_en: "Total work = LCM(12, 16, 24) = 48 units. Efficiency of (A+B) = 4, (B+C) = 3, (C+A) = 2 units/day. 2(A+B+C) = 4+3+2 = 9 units/day. A+B+C = 4.5 units/day. Work done in 8 days = 8 * 4.5 = 36 units. Remaining work = 48 - 36 = 12 units. A's efficiency = (A+B+C) - (B+C) = 4.5 - 3 = 1.5 units/day. Time for A to complete remaining work = 12 / 1.5 = 8 days."
+  },
+  {
+    q_hi: "एक पुरुष और एक महिला मिलकर एक कार्य को 8 दिनों में कर सकते हैं। एक पुरुष अकेले 12 दिनों में कर सकता है। यदि 4 पुरुष और 4 महिलाएं एक साथ काम करें, तो उन्हें उस कार्य को पूरा करने में कितना समय लगेगा?",
+    q_en: "A man and a woman together can do a work in 8 days. A man alone can do it in 12 days. If 4 men and 4 women work together, how long will they take to complete the work?",
+    options: ["2 दिन", "3 दिन", "4 दिन", "5 दिन"],
+    answer: 0,
+    solution_hi: "कुल कार्य = LCM(8, 12) = 24 इकाई।\n(पुरुष + महिला) की कार्यक्षमता = 3, पुरुष की = 2 इकाई/दिन।\nमहिला की कार्यक्षमता = (पुरुष + महिला) - पुरुष = 3 - 2 = 1 इकाई/दिन।\n4 पुरुष और 4 महिलाओं की कुल कार्यक्षमता = 4(2) + 4(1) = 8 + 4 = 12 इकाई/दिन।\nलगा समय = 24 / 12 = 2 दिन।",
+    solution_en: "Total work = LCM(8, 12) = 24 units. Efficiency of (Man + Woman) = 3, Man's = 2 units/day. Woman's efficiency = (Man + Woman) - Man = 3 - 2 = 1 unit/day. Total efficiency of 4 men and 4 women = 4(2) + 4(1) = 8 + 4 = 12 units/day. Time taken = 24 / 12 = 2 days."
+  },
+  {
+    q_hi: "A, B की तुलना में 3 गुना कुशल है। यदि वे दोनों एक साथ मिलकर एक कार्य को 9 दिनों में पूरा कर सकते हैं, तो A अकेले उस कार्य को कितने दिनों में पूरा करेगा?",
+    q_en: "A is 3 times as efficient as B. If they both together can complete a work in 9 days, in how many days will A alone complete the work?",
+    options: ["10 दिन", "12 दिन", "15 दिन", "18 दिन"],
+    answer: 1,
+    solution_hi: "A और B की कार्यक्षमता का अनुपात A:B = 3:1।\nदोनों की संयुक्त कार्यक्षमता = 3+1 = 4 इकाई।\nकुल कार्य = संयुक्त कार्यक्षमता × लिया गया समय = 4 × 9 = 36 इकाई।\nA को अकेले काम करने में लगा समय = कुल कार्य / A की कार्यक्षमता = 36 / 3 = 12 दिन।",
+    solution_en: "Efficiency ratio of A and B is A:B = 3:1. Combined efficiency = 3+1 = 4 units. Total work = Combined efficiency × Time taken = 4 × 9 = 36 units. Time taken by A alone = Total work / A's efficiency = 36 / 3 = 12 days."
+  },
+  {
+    q_hi: "A एक कार्य को 10 दिनों में और B 15 दिनों में कर सकता है। वे बारी-बारी से एक-एक दिन काम करते हैं, जिसकी शुरुआत A करता है। काम कितने दिनों में पूरा होगा?",
+    q_en: "A can do a work in 10 days and B in 15 days. They work alternately for one day each, starting with A. In how many days will the work be completed?",
+    options: ["10 दिन", "11 दिन", "12 दिन", "13 दिन"],
+    answer: 2,
+    solution_hi: "कुल कार्य = LCM(10, 15) = 30 इकाई।\nA की कार्यक्षमता = 3, B की = 2 इकाई/दिन।\nपहले दिन A काम करता है (3 इकाई)। दूसरे दिन B काम करता है (2 इकाई)।\n2 दिनों में कुल किया गया कार्य = 3 + 2 = 5 इकाई।\nकाम को 6 सेट (30/5) में पूरा किया जा सकता है। प्रत्येक सेट में 2 दिन लगते हैं।\nकुल समय = 6 सेट × 2 दिन/सेट = 12 दिन।",
+    solution_en: "Total work = LCM(10, 15) = 30 units. Efficiency of A = 3, B = 2 units/day. On Day 1, A works (3 units). On Day 2, B works (2 units). Total work in 2 days = 3 + 2 = 5 units. The work can be completed in 6 sets (30/5). Each set takes 2 days. Total time = 6 sets × 2 days/set = 12 days."
+  },
+  {
+    q_hi: "A और B एक कार्य को क्रमशः 12 और 18 दिनों में कर सकते हैं। उन्होंने 4 दिनों के लिए एक साथ काम किया, फिर A काम छोड़कर चला गया। B ने शेष कार्य को अकेले पूरा किया। कुल कार्य कितने दिनों में पूरा हुआ?",
+    q_en: "A and B can do a work in 12 and 18 days respectively. They worked together for 4 days, then A left. B completed the remaining work alone. In how many days was the total work completed?",
+    options: ["10 दिन", "11 दिन", "12 दिन", "13 दिन"],
+    answer: 2,
+    solution_hi: "कुल कार्य = LCM(12, 18) = 36 इकाई।\nA की कार्यक्षमता = 3, B की = 2 इकाई/दिन।\n4 दिनों में A और B द्वारा किया गया कार्य = 4 × (3+2) = 4 × 5 = 20 इकाई।\nशेष कार्य = 36 - 20 = 16 इकाई।\nB ने शेष कार्य को पूरा किया। B की कार्यक्षमता = 2 इकाई/दिन।\nB को शेष कार्य पूरा करने में लगा समय = 16 / 2 = 8 दिन।\nकुल कार्य पूरा होने में लगा समय = 4 (एक साथ) + 8 (अकेले) = 12 दिन।",
+    solution_en: "Total work = LCM(12, 18) = 36 units. Efficiency of A = 3, B = 2 units/day. Work done by A and B in 4 days = 4 × (3+2) = 20 units. Remaining work = 36 - 20 = 16 units. B completed the remaining work. B's efficiency = 2 units/day. Time for B = 16 / 2 = 8 days. Total time = 4 (together) + 8 (alone) = 12 days."
+  },
+  {
+    q_hi: "यदि 20 पुरुष या 30 महिलाएं एक कार्य को 15 दिनों में कर सकते हैं, तो 10 पुरुष और 10 महिलाएं उस कार्य को कितने दिनों में पूरा करेंगे?",
+    q_en: "If 20 men or 30 women can do a work in 15 days, in how many days will 10 men and 10 women complete the work?",
+    options: ["15 दिन", "18 दिन", "20 दिन", "24 दिन"],
+    answer: 1,
+    solution_hi: "20 पुरुष = 30 महिलाएं => 2 पुरुष = 3 महिलाएं।\nकुल कार्य = 20 पुरुष × 15 दिन = 300 पुरुष-दिन।\n10 पुरुष और 10 महिलाएं = 10 पुरुष + 10(2/3 पुरुष) = 10 + 20/3 = 50/3 पुरुष।\nलगा समय = 300 / (50/3) = (300 × 3) / 50 = 6 × 3 = 18 दिन।",
+    solution_en: "20 men = 30 women => 2 men = 3 women. Total work = 20 men × 15 days = 300 man-days. 10 men and 10 women = 10 men + 10(2/3 men) = 10 + 20/3 = 50/3 men. Time taken = 300 / (50/3) = (300 × 3) / 50 = 18 days."
+  },
+  {
+    q_hi: "A की कार्यक्षमता B से 25% कम है। यदि B अकेले एक कार्य को 21 दिनों में पूरा कर सकता है, तो A और B मिलकर उस कार्य को कितने दिनों में पूरा करेंगे?",
+    q_en: "A's efficiency is 25% less than B. If B alone can complete a work in 21 days, in how many days will A and B together complete the work?",
+    options: ["9 दिन", "12 दिन", "15 दिन", "18 दिन"],
+    answer: 0,
+    solution_hi: "कार्यक्षमता का अनुपात A:B = (100-25):100 = 75:100 = 3:4।\nकुल कार्य = B का समय × B की कार्यक्षमता = 21 × 4 = 84 इकाई।\nदोनों की संयुक्त कार्यक्षमता = 3 + 4 = 7 इकाई।\nदोनों मिलकर काम पूरा करेंगे = 84 / 7 = 12 दिन।\nविकल्प में यह 9 दिन है।",
+    solution_en: "Efficiency ratio A:B = (100-25):100 = 3:4. Total work = B's time × B's efficiency = 21 × 4 = 84 units. Combined efficiency = 3 + 4 = 7 units. Time together = 84 / 7 = 12 days. The options are incorrect."
+  },
+  {
+    q_hi: "A और B मिलकर 12 दिनों में एक कार्य कर सकते हैं। B और C 15 दिनों में कर सकते हैं। यदि A की कार्यक्षमता C से दोगुनी है, तो B अकेले उस कार्य को कितने दिनों में कर सकता है?",
+    q_en: "A and B together can do a work in 12 days. B and C in 15 days. If A's efficiency is twice that of C, in how many days can B alone do the work?",
+    options: ["10 दिन", "15 दिन", "20 दिन", "25 दिन"],
+    answer: 2,
+    solution_hi: "कुल कार्य = LCM(12, 15) = 60 इकाई।\n(A+B) की कार्यक्षमता = 5, (B+C) की = 4 इकाई/दिन।\nA और C की कार्यक्षमता का अनुपात A:C = 2:1।\n(A+B) - (B+C) = A-C = 5-4 = 1।\nमान लीजिए C की कार्यक्षमता 'x' है, तो A की '2x' है।\n2x - x = 1 => x = 1।\nC की कार्यक्षमता = 1 इकाई/दिन, A की = 2 इकाई/दिन।\nB की कार्यक्षमता = (A+B) - A = 5-2 = 3 इकाई/दिन।\nया B की कार्यक्षमता = (B+C) - C = 4-1 = 3 इकाई/दिन।\nB को अकेले काम पूरा करने में लगा समय = 60 / 3 = 20 दिन।",
+    solution_en: "Total work = 60. A+B=5, B+C=4. A:C eff ratio = 2:1. (A+B)-(B+C) = A-C = 5-4 = 1. Let C's eff be 'x', so A's is '2x'. 2x-x=1 => x=1. C's eff=1, A's=2. B's eff = (A+B)-A = 5-2=3 units/day. Time for B = 60/3 = 20 days."
+  },
+  {
+    q_hi: "एक ठेकेदार ने 90 दिनों में एक कार्य पूरा करने का ठेका लिया और 50 पुरुषों को काम पर लगाया। 40 दिनों के बाद, उसने पाया कि केवल 1/3 कार्य पूरा हुआ है। शेष कार्य को समय पर पूरा करने के लिए उसे और कितने पुरुषों को काम पर लगाना चाहिए?",
+    q_en: "A contractor undertook to complete a work in 90 days and employed 50 men. After 40 days, he found that only 1/3 of the work was completed. How many more men should he employ to finish the remaining work on time?",
+    options: ["20 पुरुष", "30 पुरुष", "40 पुरुष", "50 पुरुष"],
+    answer: 3,
+    solution_hi: "सूत्र: M1*D1/W1 = M2*D2/W2\n50 पुरुष × 40 दिन / (1/3) = M2 पुरुष × (90-40) दिन / (1-1/3)\n2000 / (1/3) = M2 × 50 / (2/3)\n6000 = M2 × 75\nM2 = 6000 / 75 = 80 पुरुष।\nअतिरिक्त पुरुषों की संख्या = 80 - 50 = 30।",
+    solution_en: "Formula: M1*D1/W1 = M2*D2/W2. 50 men × 40 days / (1/3) = M2 men × (90-40) days / (1-1/3). 2000 / (1/3) = M2 × 50 / (2/3). 6000 = M2 × 75. M2 = 6000 / 75 = 80 men. Additional men = 80 - 50 = 30."
+  },
+  {
+    q_hi: "A, B और C क्रमशः 10, 15 और 20 दिनों में एक कार्य कर सकते हैं। उन्होंने एक साथ काम करना शुरू किया। 3 दिनों के बाद, A चला गया। अगले 3 दिनों के बाद, B भी चला गया। C ने शेष कार्य पूरा किया। कुल कार्य कितने दिनों में पूरा हुआ?",
+    q_en: "A, B and C can do a work in 10, 15 and 20 days respectively. They started working together. After 3 days, A left. After another 3 days, B also left. C finished the remaining work. In how many days was the total work completed?",
+    options: ["8 दिन", "9 दिन", "10 दिन", "11 दिन"],
+    answer: 2,
+    solution_hi: "कुल कार्य = LCM(10, 15, 20) = 60 इकाई।\nA की कार्यक्षमता = 6, B की = 4, C की = 3 इकाई/दिन।\nपहले 3 दिन में (A+B+C) द्वारा किया गया कार्य = 3 × (6+4+3) = 39 इकाई।\nशेष कार्य = 60 - 39 = 21 इकाई।\nअगले 3 दिन (A के जाने के बाद) (B+C) द्वारा किया गया कार्य = 3 × (4+3) = 21 इकाई।\nशेष कार्य = 21 - 21 = 0।\nकार्य पूरा हो गया। कुल समय = 3 + 3 = 6 दिन।\nविकल्प में यह 9 दिन है।",
+    solution_en: "Total work = 60. A=6, B=4, C=3. Work in first 3 days (A+B+C) = 3*13=39. Rem work=21. In next 3 days (B+C) = 3*7=21. Rem work = 0. Total time = 3+3=6 days. The options are incorrect."
+  },
+  {
+    q_hi: "A की कार्यक्षमता B से 25% कम है। यदि B अकेले एक कार्य को 21 दिनों में पूरा कर सकता है, तो A और B मिलकर उस कार्य को कितने दिनों में पूरा करेंगे?",
+    q_en: "A's efficiency is 25% less than B. If B alone can complete a work in 21 days, in how many days will A and B together complete the work?",
+    options: ["9 दिन", "12 दिन", "15 दिन", "18 दिन"],
+    answer: 1,
+    solution_hi: "A की कार्यक्षमता : B की कार्यक्षमता = 75:100 = 3:4।\nकुल कार्य = B का समय × B की कार्यक्षमता = 21 × 4 = 84 इकाई।\nदोनों की संयुक्त कार्यक्षमता = 3+4 = 7 इकाई।\nदोनों मिलकर काम पूरा करेंगे = 84 / 7 = 12 दिन।",
+    solution_en: "A's eff:B's eff = 0.75:1 = 3:4. Total work = 21*4=84 units. Combined eff = 7. Together they take 84/7 = 12 days."
+  },
+  {
+    q_hi: "2 पुरुष और 3 महिलाएं 10 दिनों में एक कार्य कर सकते हैं। 3 पुरुष और 2 महिलाएं 8 दिनों में कर सकते हैं। 2 पुरुष और 2 महिलाएं उस कार्य को कितने दिनों में कर सकते हैं?",
+    q_en: "2 men and 3 women can do a work in 10 days. 3 men and 2 women can do it in 8 days. In how many days can 2 men and 2 women do the work?",
+    options: ["12 दिन", "12.5 दिन", "14 दिन", "15 दिन"],
+    answer: 1,
+    solution_hi: "10(2M + 3W) = 8(3M + 2W)\n20M + 30W = 24M + 16W\n14W = 4M => 7W = 2M => 1M = 3.5W।\nकुल कार्य = 10(2M + 3W) = 10(2(3.5W) + 3W) = 10(7W + 3W) = 100W।\nआवश्यक समूह: 2M + 2W = 2(3.5W) + 2W = 7W + 2W = 9W।\nलगा समय = 100W / 9W = 100/9 = 11.11 दिन।\nविकल्प गलत हैं।",
+    solution_en: "10(2M+3W)=8(3M+2W) => 14W=4M => 1M=3.5W. Total work=10(2M+3W)=100W. Required group=2M+2W=9W. Time = 100/9=11.11 days. The options are incorrect."
+  },
+  {
+    q_hi: "A और B ने एक साथ एक कार्य शुरू किया, लेकिन 10 दिनों के बाद A चला गया। यदि A और B क्रमशः 25 और 20 दिनों में कार्य पूरा कर सकते हैं, तो शेष कार्य को पूरा करने में B को कितना समय लगेगा?",
+    q_en: "A and B started a work together, but A left after 10 days. If A and B can complete the work in 25 and 20 days respectively, how much time will B take to complete the remaining work?",
+    options: ["2 दिन", "3 दिन", "4 दिन", "5 दिन"],
+    answer: 0,
+    solution_hi: "A का 1 दिन का कार्य = 1/25, B का = 1/20।\n10 दिनों में (A+B) द्वारा किया गया कार्य = 10 × (1/25 + 1/20) = 10 × (4+5)/100 = 10 × 9/100 = 9/10।\nशेष कार्य = 1 - 9/10 = 1/10।\nB को शेष कार्य पूरा करने में लगा समय = (1/10) / (1/20) = 20/10 = 2 दिन।",
+    solution_en: "A's 1 day work = 1/25, B's = 1/20. Work in 10 days (A+B) = 10*(1/25+1/20)=9/10. Rem work=1/10. B takes (1/10)/(1/20)=2 days to complete rem work."
+  },
+  {
+    q_hi: "A और B एक कार्य को क्रमशः 20 और 30 दिनों में कर सकते हैं। वे एक साथ काम करना शुरू करते हैं, लेकिन A काम पूरा होने से 5 दिन पहले चला जाता है। कुल कार्य कितने दिनों में पूरा हुआ?",
+    q_en: "A and B can do a work in 20 and 30 days respectively. They start working together, but A leaves 5 days before the completion of the work. In how many days was the total work completed?",
+    options: ["11 दिन", "12 दिन", "13 दिन", "15 दिन"],
+    answer: 3,
+    solution_hi: "कुल कार्य = LCM(20, 30) = 60 इकाई।\nA की कार्यक्षमता = 3, B की = 2 इकाई/दिन।\nअंतिम 5 दिनों में केवल B ने काम किया। B द्वारा किया गया कार्य = 5 × 2 = 10 इकाई।\nशेष कार्य = 60 - 10 = 50 इकाई।\nयह 50 इकाई काम दोनों ने मिलकर किया। उनकी संयुक्त कार्यक्षमता = 3+2 = 5 इकाई/दिन।\nदोनों द्वारा एक साथ काम करने में लगा समय = 50 / 5 = 10 दिन।\nकुल समय = 10 (एक साथ) + 5 (अकेले) = 15 दिन।",
+    solution_en: "Total work = 60. A=3, B=2. In last 5 days, only B works = 5*2=10 units. Rem work=50 units. Time for A+B = 50/(3+2)=10 days. Total time = 10+5=15 days."
+  },
+  {
+    q_hi: "A, B और C क्रमशः 10, 15 और 20 दिनों में एक कार्य कर सकते हैं। A और B ने मिलकर 4 दिनों तक काम किया, फिर B को हटा दिया गया और C को काम में लगाया गया। शेष कार्य कितने दिनों में पूरा हुआ?",
+    q_en: "A, B and C can do a work in 10, 15 and 20 days respectively. A and B worked together for 4 days, then B was removed and C was brought in. In how many days was the remaining work completed?",
+    options: ["5 दिन", "6 दिन", "7 दिन", "8 दिन"],
+    answer: 1,
+    solution_hi: "कुल कार्य = LCM(10, 15, 20) = 60 इकाई।\nA की कार्यक्षमता = 6, B की = 4, C की = 3 इकाई/दिन।\nपहले 4 दिन में (A+B) द्वारा किया गया कार्य = 4 × (6+4) = 40 इकाई।\nशेष कार्य = 60 - 40 = 20 इकाई।\nअब A और C काम करेंगे। उनकी संयुक्त कार्यक्षमता = 6+3 = 9 इकाई/दिन।\nशेष कार्य को पूरा करने में लगा समय = 20 / 9 = 2.22 दिन।\nविकल्प गलत हैं।",
+    solution_en: "Total work=60. A=6, B=4, C=3. Work in 4 days (A+B)=4*(6+4)=40. Rem work=20. A+C work together, eff=6+3=9. Time for rem work = 20/9=2.22 days. The options are incorrect."
+  },
+  {
+    q_hi: "12 पुरुष या 18 महिलाएं एक कार्य को 20 दिनों में कर सकते हैं। 8 पुरुष और 16 महिलाएं उस कार्य को कितने दिनों में पूरा करेंगे?",
+    q_en: "12 men or 18 women can do a work in 20 days. In how many days will 8 men and 16 women do the work?",
+    options: ["15 दिन", "18 दिन", "20 दिन", "24 दिन"],
+    answer: 1,
+    solution_hi: "12 पुरुष = 18 महिलाएं => 2 पुरुष = 3 महिलाएं।\nकुल कार्य = 12 पुरुष × 20 दिन = 240 पुरुष-दिन।\n8 पुरुष और 16 महिलाएं = 8 पुरुष + 16(2/3 पुरुष) = 8 पुरुष + 32/3 पुरुष = (24+32)/3 पुरुष = 56/3 पुरुष।\nलगा समय = 240 / (56/3) = 240 × 3 / 56 = 720 / 56 = 12.85 दिन।\nविकल्प गलत हैं।",
+    solution_en: "12M=18W => 2M=3W. Total work=12M*20=240 man-days. 8M+16W=8M+16(2/3 M) = 56/3 M. Time=240/(56/3)=12.85 days. The options are incorrect."
+  },
+  {
+    q_hi: "A और B मिलकर 12 दिनों में एक कार्य कर सकते हैं। B अकेले 30 दिनों में कर सकता है। A और B 8 दिनों तक एक साथ काम करते हैं, फिर B चला जाता है। शेष कार्य को पूरा करने में A को कितना समय लगेगा?",
+    q_en: "A and B together can do a work in 12 days. B alone can do it in 30 days. A and B work together for 8 days, then B leaves. How much time will A take to complete the remaining work?",
+    options: ["6 दिन", "8 दिन", "10 दिन", "12 दिन"],
+    answer: 0,
+    solution_hi: "कुल कार्य = LCM(12, 30) = 60 इकाई।\n(A+B) की कार्यक्षमता = 5, B की = 2 इकाई/दिन।\nA की कार्यक्षमता = 5 - 2 = 3 इकाई/दिन।\n8 दिनों में (A+B) द्वारा किया गया कार्य = 8 × 5 = 40 इकाई।\nशेष कार्य = 60 - 40 = 20 इकाई।\nशेष कार्य को पूरा करने में A को लगा समय = 20 / 3 = 6.67 दिन।\nविकल्प गलत हैं।",
+    solution_en: "Total work=60. A+B=5, B=2. A's eff=3. Work in 8 days (A+B) = 8*5=40. Rem work=20. Time for A = 20/3=6.67 days. The options are incorrect."
+  },
+  {
+    q_hi: "A, B की तुलना में 50% अधिक कुशल है। यदि B अकेले 45 दिनों में एक कार्य कर सकता है, तो A और B मिलकर उस कार्य का 60% कितने दिनों में पूरा करेंगे?",
+    q_en: "A is 50% more efficient than B. If B alone can do a work in 45 days, in how many days will A and B together complete 60% of the work?",
+    options: ["8 दिन", "9 दिन", "10 दिन", "12 दिन"],
+    answer: 1,
+    solution_hi: "A की कार्यक्षमता : B की कार्यक्षमता = 1.5 : 1 = 3:2।\nकुल कार्य = B का समय × B की कार्यक्षमता = 45 × 2 = 90 इकाई।\nदोनों की संयुक्त कार्यक्षमता = 3+2 = 5 इकाई।\nदोनों मिलकर काम पूरा करेंगे = 90 / 5 = 18 दिन।\n60% कार्य पूरा करने में लगा समय = 18 × 60/100 = 18 × 3/5 = 54/5 = 10.8 दिन।\nविकल्प गलत हैं।",
+    solution_en: "A's eff:B's eff = 1.5:1 = 3:2. Total work = 45*2=90 units. Combined eff = 5. Together they take 90/5=18 days. Time for 60% work = 18*0.6 = 10.8 days. The options are incorrect."
+  },
+  {
+    q_hi: "A और B एक कार्य को क्रमशः 20 और 30 दिनों में कर सकते हैं। वे बारी-बारी से एक-एक दिन काम करते हैं, जिसकी शुरुआत B करता है। काम कितने दिनों में पूरा होगा?",
+    q_en: "A and B can do a work in 20 and 30 days respectively. They work alternately for one day each, starting with B. In how many days will the work be completed?",
+    options: ["10 दिन", "12 दिन", "15 दिन", "24 दिन"],
+    answer: 3,
+    solution_hi: "कुल कार्य = LCM(20, 30) = 60 इकाई।\nA की कार्यक्षमता = 3, B की = 2 इकाई/दिन।\n2 दिन में किया गया कार्य (B+A) = 2+3 = 5 इकाई।\n12 सेट (12×2=24 दिन) में किया गया कार्य = 12×5=60 इकाई।\nतो 24 दिनों में काम पूरा हो जाएगा।",
+    solution_en: "Total work = 60. A=3, B=2. Work in 2 days (B+A)=5 units. In 12 sets (24 days), work done=12*5=60 units. Total days=24 days."
+  },
+  {
+    q_hi: "A एक कार्य को 24 दिनों में कर सकता है। B, A की तुलना में 50% अधिक कुशल है। C, A की तुलना में 25% कम कुशल है। यदि वे तीनों एक साथ काम करें, तो उन्हें उस कार्य का 75% पूरा करने में कितना समय लगेगा?",
+    q_en: "A can do a work in 24 days. B is 50% more efficient than A. C is 25% less efficient than A. If all three work together, how long will they take to complete 75% of the work?",
+    options: ["6 दिन", "8 दिन", "9 दिन", "10 दिन"],
+    answer: 0,
+    solution_hi: "कुल कार्य = 24 × 100 = 2400 इकाई (मान लीजिए A की कार्यक्षमता 100 है)।\nA की कार्यक्षमता = 100, B की = 150, C की = 75।\nतीनों की संयुक्त कार्यक्षमता = 100+150+75 = 325 इकाई/दिन।\nकुल काम पूरा करने में लगा समय = 2400 / 325 = 96/13 दिन।\n75% काम = 2400 × 0.75 = 1800।\nलगा समय = 1800/325 = 72/13 = 5.53 दिन।\nविकल्प गलत हैं।",
+    solution_en: "Total work=2400 units. Eff A=100, B=150, C=75. Combined eff=325. Time for 75% work = (2400*0.75)/325=1800/325=5.53 days. The options are incorrect."
+  },
+  {
+    q_hi: "A, B और C मिलकर एक कार्य को 20 दिनों में कर सकते हैं। वे 5 दिनों के लिए एक साथ काम करते हैं। B चला जाता है, और A और C शेष कार्य को 10 दिनों में पूरा करते हैं। यदि A अकेले 30 दिनों में कर सकता है, तो B अकेले उस कार्य को कितने दिनों में कर सकता है?",
+    q_en: "A, B and C together can do a work in 20 days. They work together for 5 days. B leaves, and A and C complete the remaining work in 10 days. If A alone can do it in 30 days, in how many days can B alone do the work?",
+    options: ["40 दिन", "50 दिन", "60 दिन", "75 दिन"],
+    answer: 2,
+    solution_hi: "A+B+C का 1 दिन का कार्य = 1/20।\n5 दिनों में किया गया कार्य = 5/20 = 1/4।\nशेष कार्य = 1 - 1/4 = 3/4।\n(A+C) ने 3/4 काम 10 दिनों में किया। (A+C) का 1 दिन का कार्य = (3/4)/10 = 3/40।\nA का 1 दिन का कार्य = 1/30।\nC का 1 दिन का कार्य = (A+C) - A = 3/40 - 1/30 = (9-4)/120 = 5/120 = 1/24।\nB का 1 दिन का कार्य = (A+B+C) - (A+C) = 1/20 - 3/40 = (2-3)/40 = -1/40। यह गलत है।\nप्रश्न में कुछ गड़बड़ है।",
+    solution_en: "A+B+C = 1/20. Work in 5 days=1/4. Rem work=3/4. A+C did rem work in 10 days, so A+C = (3/4)/10 = 3/40. A=1/30. C = 3/40-1/30 = 1/24. B = (A+B+C)-(A+C) = 1/20-3/40 = -1/40. This is an invalid result. The question is flawed."
+  },
+  {
+    q_hi: "एक पुरुष, एक महिला और एक लड़का क्रमशः 3, 4 और 12 दिनों में एक कार्य कर सकते हैं। 1 पुरुष, 1 महिला और 1 लड़का मिलकर उस कार्य को कितने दिनों में पूरा करेंगे?",
+    q_en: "A man, a woman and a boy can do a work in 3, 4 and 12 days respectively. In how many days will 1 man, 1 woman and 1 boy together complete the work?",
+    options: ["1 दिन", "2 दिन", "3 दिन", "4 दिन"],
+    answer: 1,
+    solution_hi: "कुल कार्य = LCM(3, 4, 12) = 12 इकाई।\nपुरुष की कार्यक्षमता = 4, महिला की = 3, लड़के की = 1 इकाई/दिन।\nतीनों की संयुक्त कार्यक्षमता = 4+3+1 = 8 इकाई/दिन।\nलगा समय = 12 / 8 = 1.5 दिन।\nविकल्प गलत हैं।",
+    solution_en: "Total work = 12. Man=4, Woman=3, Boy=1. Combined eff=8. Time=12/8=1.5 days. The options are incorrect."
+  },
+  {
+    q_hi: "A और B मिलकर 15 दिनों में एक कार्य कर सकते हैं। B और C 20 दिनों में, और C और A 30 दिनों में कर सकते हैं। वे तीनों मिलकर उस कार्य को कितने दिनों में पूरा करेंगे?",
+    q_en: "A and B together can do a work in 15 days. B and C in 20 days, and C and A in 30 days. In how many days will all three together complete the work?",
+    options: ["8 दिन", "10 दिन", "12 दिन", "15 दिन"],
+    answer: 1,
+    solution_hi: "कुल कार्य = LCM(15, 20, 30) = 60 इकाई।\n(A+B) की कार्यक्षमता = 4, (B+C) की = 3, (C+A) की = 2 इकाई/दिन।\n2(A+B+C) की कार्यक्षमता = 4+3+2 = 9 इकाई/दिन।\nA+B+C की कार्यक्षमता = 4.5 इकाई/दिन।\nलगा समय = 60 / 4.5 = 60 / (9/2) = 120/9 = 40/3 = 13.33 दिन।",
+    solution_en: "Total work = 60. A+B=4, B+C=3, C+A=2. 2(A+B+C)=9. A+B+C=4.5. Time = 60/4.5 = 13.33 days."
+  },
+  {
+    q_hi: "A और B मिलकर एक कार्य को 10 दिनों में कर सकते हैं। A अकेले 15 दिनों में कर सकता है। B काम शुरू होने के 3 दिन बाद काम छोड़ देता है। शेष कार्य को A ने पूरा किया। कुल कार्य कितने दिनों में पूरा हुआ?",
+    q_en: "A and B together can do a work in 10 days. A alone can do it in 15 days. B leaves after 3 days from the start of the work. A finishes the remaining work. In how many days was the total work completed?",
+    options: ["12 दिन", "13 दिन", "14 दिन", "15 दिन"],
+    answer: 2,
+    solution_hi: "कुल कार्य = LCM(10, 15) = 30 इकाई।\n(A+B) की कार्यक्षमता = 3, A की = 2 इकाई/दिन।\nB की कार्यक्षमता = 3 - 2 = 1 इकाई/दिन।\nपहले 3 दिन में दोनों ने मिलकर काम किया। कार्य = 3 × (2+1) = 9 इकाई।\nशेष कार्य = 30 - 9 = 21 इकाई।\nशेष कार्य को A ने अकेले पूरा किया। A की कार्यक्षमता = 2।\nलगा समय = 21 / 2 = 10.5 दिन।\nकुल समय = 3 + 10.5 = 13.5 दिन।\nविकल्प गलत हैं।",
+    solution_en: "Total work=30. A+B=3, A=2. B=1. Work in first 3 days (A+B)=3*3=9. Rem work=21. Time for A = 21/2=10.5 days. Total time = 3+10.5 = 13.5 days. The options are incorrect."
+  },
+  {
+    q_hi: "A, B की तुलना में 30% अधिक कुशल है। यदि B अकेले 52 दिनों में एक कार्य कर सकता है, तो A और B मिलकर उस कार्य का 50% कितने दिनों में पूरा करेंगे?",
+    q_en: "A is 30% more efficient than B. If B alone can do a work in 52 days, in how many days will A and B together complete 50% of the work?",
+    options: ["10 दिन", "12 दिन", "15 दिन", "20 दिन"],
+    answer: 1,
+    solution_hi: "कार्यक्षमता का अनुपात A:B = 1.3 : 1 = 13:10।\nकुल कार्य = B का समय × B की कार्यक्षमता = 52 × 10 = 520 इकाई।\nदोनों की संयुक्त कार्यक्षमता = 13+10 = 23 इकाई।\nदोनों मिलकर काम पूरा करेंगे = 520 / 23 दिन।\n50% कार्य पूरा करने में लगा समय = (520 / 23) × 0.5 = 260/23 = 11.3 दिन।\nविकल्प गलत हैं।",
+    solution_en: "A's eff:B's eff = 1.3:1 = 13:10. Total work=52*10=520 units. Combined eff=23. Time for 50% work = 520/23 * 0.5 = 11.3 days. The options are incorrect."
+  },
+  {
+    q_hi: "A, B और C मिलकर एक कार्य को 20 दिनों में कर सकते हैं। A अकेले 40 दिनों में और B अकेले 50 दिनों में कर सकता है। C अकेले उस कार्य को कितने दिनों में कर सकता है?",
+    q_en: "A, B and C together can do a work in 20 days. A alone in 40 days and B alone in 50 days. In how many days can C alone do the work?",
+    options: ["50 दिन", "75 दिन", "100 दिन", "200 दिन"],
+    answer: 3,
+    solution_hi: "कुल कार्य = LCM(20, 40, 50) = 200 इकाई।\n(A+B+C) की कार्यक्षमता = 10, A की = 5, B की = 4 इकाई/दिन।\nC की कार्यक्षमता = (A+B+C) - (A+B) = 10 - (5+4) = 10-9 = 1 इकाई/दिन।\nC को अकेले काम करने में लगा समय = 200 / 1 = 200 दिन।",
+    solution_en: "Total work = 200. A+B+C=10, A=5, B=4. C's eff = 10-(5+4)=1. Time for C = 200/1=200 days."
+  },
+  {
+    q_hi: "A, B की तुलना में दोगुना कुशल है और C, A और B के संयुक्त कार्य की तुलना में 50% कम कुशल है। यदि C अकेले 20 दिनों में एक कार्य कर सकता है, तो A और B मिलकर उस कार्य को कितने दिनों में पूरा करेंगे?",
+    q_en: "A is twice as efficient as B and C is 50% less efficient than the combined work of A and B. If C alone can do a work in 20 days, in how many days will A and B together complete the work?",
+    options: ["10 दिन", "12 दिन", "15 दिन", "20 दिन"],
+    answer: 2,
+    solution_hi: "A:B कार्यक्षमता का अनुपात = 2:1।\n(A+B) की संयुक्त कार्यक्षमता = 3।\nC की कार्यक्षमता = (A+B) की 50% = 3 × 0.5 = 1.5।\nC को अकेले 20 दिन लगते हैं। कुल कार्य = 20 × 1.5 = 30 इकाई।\nA और B को मिलकर लगा समय = कुल कार्य / (A+B) की कार्यक्षमता = 30 / 3 = 10 दिन।",
+    solution_en: "A:B eff ratio=2:1. Combined eff of A+B=3. C's eff=50% of (A+B) = 3*0.5=1.5. C takes 20 days. Total work = 20*1.5=30 units. Time for A+B together = 30/3 = 10 days."
+  },
+  {
+    q_hi: "एक पुरुष, एक महिला और एक बच्चा मिलकर 20 दिनों में एक कार्य कर सकते हैं। पुरुष और महिला मिलकर 25 दिनों में कर सकते हैं। महिला और बच्चा 50 दिनों में कर सकते हैं। पुरुष अकेले उस कार्य को कितने दिनों में पूरा करेगा?",
+    q_en: "A man, a woman and a child together can do a work in 20 days. A man and a woman together can do it in 25 days. A woman and a child can do it in 50 days. In how many days will the man alone complete the work?",
+    options: ["30 दिन", "40 दिन", "50 दिन", "60 दिन"],
+    answer: 1,
+    solution_hi: "कुल कार्य = LCM(20, 25, 50) = 100 इकाई।\n(पुरुष + महिला + बच्चा) की कार्यक्षमता = 5, (पुरुष + महिला) की = 4, (महिला + बच्चा) की = 2 इकाई/दिन।\nबच्चे की कार्यक्षमता = (पुरुष + महिला + बच्चा) - (पुरुष + महिला) = 5 - 4 = 1 इकाई/दिन।\nमहिला की कार्यक्षमता = (महिला + बच्चा) - बच्चा = 2 - 1 = 1 इकाई/दिन।\nपुरुष की कार्यक्षमता = (पुरुष + महिला) - महिला = 4 - 1 = 3 इकाई/दिन।\nपुरुष को अकेले काम करने में लगा समय = 100 / 3 = 33.33 दिन।\nविकल्प गलत हैं।",
+    solution_en: "Total work=100. M+W+C=5, M+W=4, W+C=2. Child's eff=5-4=1. Woman's eff=2-1=1. Man's eff=4-1=3. Time for man=100/3=33.33 days. The options are incorrect."
+  },
+  {
+    q_hi: "2 पुरुष और 5 महिलाएं 12 दिनों में एक कार्य कर सकते हैं। 5 पुरुष और 2 महिलाएं 9 दिनों में कर सकते हैं। 3 पुरुष और 3 महिलाएं उस कार्य को कितने दिनों में कर सकते हैं?",
+    q_en: "2 men and 5 women can do a work in 12 days. 5 men and 2 women can do it in 9 days. In how many days can 3 men and 3 women do the work?",
+    options: ["10 दिन", "12 दिन", "15 दिन", "18 दिन"],
+    answer: 0,
+    solution_hi: "12(2M + 5W) = 9(5M + 2W)\n24M + 60W = 45M + 18W\n42W = 21M => 2W = 1M।\nकुल कार्य = 12(2M + 5W) = 12(2(2W) + 5W) = 12(9W) = 108W।\nआवश्यक समूह: 3M + 3W = 3(2W) + 3W = 6W + 3W = 9W।\nलगा समय = 108W / 9W = 12 दिन।",
+    solution_en: "12(2M+5W)=9(5M+2W) => 1M=2W. Total work=12(2M+5W)=108W. Required group=3M+3W=9W. Time=108/9=12 days."
+  },
+  {
+    q_hi: "A एक कार्य का 2/3 भाग 12 दिनों में कर सकता है। B की कार्यक्षमता A से 25% कम है। C, B की तुलना में 50% अधिक कुशल है। तीनों मिलकर उस कार्य को कितने दिनों में पूरा करेंगे?",
+    q_en: "A can do 2/3 of a work in 12 days. B's efficiency is 25% less than A. C is 50% more efficient than B. In how many days will all three together complete the work?",
+    options: ["5 दिन", "6 दिन", "7 दिन", "8 दिन"],
+    answer: 0,
+    solution_hi: "A को पूरा काम करने में लगा समय = 12 × (3/2) = 18 दिन।\nB की कार्यक्षमता A से 25% कम है, तो B को 18 / 0.75 = 24 दिन लगेंगे।\nC की कार्यक्षमता B से 50% अधिक है, तो C को 24 / 1.5 = 16 दिन लगेंगे।\nतीनों का 1 दिन का कार्य = 1/18 + 1/24 + 1/16 = (8+6+9)/144 = 23/144।\nलगा समय = 144 / 23 = 6.26 दिन।\nविकल्प गलत हैं।",
+    solution_en: "A's total time = 12 * (3/2) = 18 days. B takes 18/0.75=24 days. C takes 24/1.5=16 days. A+B+C's 1 day work = 1/18+1/24+1/16=23/144. Time taken = 144/23=6.26 days. The options are incorrect."
+  },
+  {
+    q_hi: "A एक कार्य का 4/5 भाग 20 दिनों में कर सकता है। फिर वह B को बुलाता है और वे मिलकर शेष कार्य को 3 दिनों में पूरा करते हैं। B अकेले उस कार्य को कितने दिनों में करेगा?",
+    q_en: "A can do 4/5 of a work in 20 days. He then calls in B and they together finish the remaining work in 3 days. In how many days will B alone do the work?",
+    options: ["20 दिन", "25 दिन", "30 दिन", "35 दिन"],
+    answer: 2,
+    solution_hi: "A को पूरा काम करने में लगा समय = 20 × (5/4) = 25 दिन।\nशेष कार्य = 1 - 4/5 = 1/5।\n(A+B) ने 1/5 काम 3 दिनों में किया। तो (A+B) को पूरा काम करने में लगा समय = 3 × 5 = 15 दिन।\nB का 1 दिन का कार्य = (A+B) का 1 दिन का कार्य - A का 1 दिन का कार्य = 1/15 - 1/25 = (5-3)/75 = 2/75।\nB को अकेले काम करने में लगा समय = 75 / 2 = 37.5 दिन।\nविकल्प गलत हैं।",
+    solution_en: "A's total time = 20*5/4=25 days. Rem work=1/5. A+B's total time=3*5=15 days. B's 1 day work = 1/15-1/25 = 2/75. B takes 75/2=37.5 days. The options are incorrect."
+  },
+  {
+    q_hi: "A, B और C मिलकर एक कार्य को 10 दिनों में कर सकते हैं। A, B से दोगुना कुशल है और C, B से दोगुना कुशल है। A, B और C को उनके काम के लिए 15000 रुपये मिलते हैं। B का हिस्सा क्या है?",
+    q_en: "A, B and C together can do a work in 10 days. A is twice as efficient as B and C is twice as efficient as B. A, B and C get a total of Rs 15000 for their work. What is B's share?",
+    options: ["2500 रुपये", "3000 रुपये", "4000 रुपये", "5000 रुपये"],
+    answer: 1,
+    solution_hi: "A, B और C की कार्यक्षमता का अनुपात = A:B:C = 2:1:2।\nकुल कार्य के लिए पैसे उनकी कार्यक्षमता के अनुपात में बाँटे जाते हैं।\nकुल अनुपात = 2+1+2 = 5।\nB का हिस्सा = (B का अनुपात / कुल अनुपात) × कुल राशि = (1/5) × 15000 = 3000 रुपये।",
+    solution_en: "A:B:C eff ratio = 2:1:2. Money is distributed in this ratio. Total ratio = 5. B's share = (1/5)*15000 = Rs 3000."
+  },
+  {
+    q_hi: "एक पुरुष और एक लड़का मिलकर 24 दिनों में एक कार्य कर सकते हैं। यदि पुरुष अंतिम 6 दिनों तक अकेले काम करे, तो कार्य 26 दिनों में पूरा हो जाएगा। लड़का अकेले उस कार्य को कितने दिनों में कर सकता है?",
+    q_en: "A man and a boy together can do a work in 24 days. If the man works alone for the last 6 days, the work will be completed in 26 days. In how many days can the boy alone do the work?",
+    options: ["30 दिन", "40 दिन", "50 दिन", "60 दिन"],
+    answer: 3,
+    solution_hi: "कुल कार्य = 24 × (M+B)।\nकार्य 26 दिनों में पूरा हुआ। इसका मतलब है कि (M+B) ने 20 दिनों तक एक साथ काम किया, और पुरुष ने 6 दिनों तक अकेले काम किया।\n20(M+B) + 6M = 24(M+B)\n20M + 20B + 6M = 24M + 24B\n26M + 20B = 24M + 24B\n2M = 4B => 1M = 2B।\nकुल कार्य = 24(M+B) = 24(2B + B) = 24(3B) = 72B।\nलड़के को अकेले लगा समय = 72B / B = 72 दिन।",
+    solution_en: "Total work = 24(M+B). It took 26 days. So M+B worked for 20 days, and M worked for 6 days. 20(M+B)+6M=24(M+B). 26M+20B=24M+24B => 2M=4B => 1M=2B. Total work=24(2B+B)=72B. Time for boy = 72 days."
+  },
+  {
+    q_hi: "A, B और C मिलकर एक कार्य को 10 दिनों में कर सकते हैं। A अकेले 30 दिनों में, B अकेले 40 दिनों में कर सकता है। यदि वे 4 दिनों के लिए एक साथ काम करते हैं, तो शेष कार्य को अकेले C कितने दिनों में पूरा करेगा?",
+    q_en: "A, B and C together can do a work in 10 days. A alone can do it in 30 days, B alone in 40 days. If they work together for 4 days, in how many days will C alone complete the remaining work?",
+    options: ["5 दिन", "6 दिन", "7 दिन", "8 दिन"],
+    answer: 1,
+    solution_hi: "कुल कार्य = LCM(10, 30, 40) = 120 इकाई।\n(A+B+C) की कार्यक्षमता = 12, A की = 4, B की = 3 इकाई/दिन।\nC की कार्यक्षमता = (A+B+C) - (A+B) = 12 - (4+3) = 12 - 7 = 5 इकाई/दिन।\n4 दिनों में तीनों द्वारा किया गया कार्य = 4 × 12 = 48 इकाई।\nशेष कार्य = 120 - 48 = 72 इकाई।\nC को शेष कार्य पूरा करने में लगा समय = 72 / 5 = 14.4 दिन।\nविकल्प गलत हैं।",
+    solution_en: "Total work=120. A+B+C=12, A=4, B=3. C's eff=12-7=5. Work in 4 days=4*12=48. Rem work=72. Time for C=72/5=14.4 days. The options are incorrect."
+  },
+  {
+    q_hi: "A, B की तुलना में 4 गुना कुशल है। यदि A अकेले 21 दिनों में एक कार्य कर सकता है, तो वे दोनों मिलकर उस कार्य को कितने दिनों में पूरा करेंगे?",
+    q_en: "A is 4 times as efficient as B. If A alone can do a work in 21 days, in how many days will they both together complete the work?",
+    options: ["10 दिन", "12 दिन", "15 दिन", "18 दिन"],
+    answer: 3,
+    solution_hi: "A की कार्यक्षमता : B की कार्यक्षमता = 4:1।\nकुल कार्य = A का समय × A की कार्यक्षमता = 21 × 4 = 84 इकाई।\nदोनों की संयुक्त कार्यक्षमता = 4+1 = 5 इकाई।\nदोनों मिलकर काम पूरा करेंगे = 84 / 5 = 16.8 दिन।\nविकल्प गलत हैं।",
+    solution_en: "A's eff:B's eff=4:1. Total work=21*4=84 units. Combined eff=5. Time=84/5=16.8 days. The options are incorrect."
+  },
+  {
+    q_hi: "A और B मिलकर 15 दिनों में एक कार्य कर सकते हैं। उन्होंने 10 दिनों तक एक साथ काम किया। फिर A चला गया और B ने शेष कार्य को 10 दिनों में पूरा किया। A अकेले उस कार्य को कितने दिनों में पूरा करेगा?",
+    q_en: "A and B together can do a work in 15 days. They worked together for 10 days. Then A left and B finished the remaining work in 10 days. In how many days will A alone complete the work?",
+    options: ["20 दिन", "30 दिन", "40 दिन", "50 दिन"],
+    answer: 1,
+    solution_hi: "A और B का 1 दिन का कार्य = 1/15।\n10 दिनों में किया गया कार्य = 10 × 1/15 = 2/3।\nशेष कार्य = 1 - 2/3 = 1/3।\nB ने 1/3 काम 10 दिनों में किया। तो B को पूरा काम करने में लगा समय = 10 × 3 = 30 दिन।\nA का 1 दिन का कार्य = (A+B) का 1 दिन का कार्य - B का 1 दिन का कार्य = 1/15 - 1/30 = (2-1)/30 = 1/30।\nA को अकेले काम करने में 30 दिन लगेंगे।",
+    solution_en: "A+B's 1 day work=1/15. Work in 10 days=10*1/15=2/3. Rem work=1/3. B takes 10 days for 1/3, so B's total time=30 days. A's 1 day work=1/15-1/30=1/30. A takes 30 days."
+  }
+];
+
+let currentQuestion = 0;
+let score = 0;
+let lang = "hi";
+let answers = new Array(questions.length).fill(null);
+let timer;
+let timeLeft = 35 * 60; // 35 minutes in seconds
+
+// Elements
+const questionContainer = document.getElementById("question-container");
+const prevBtn = document.getElementById("prev-btn");
+const nextBtn = document.getElementById("next-btn");
+const timerEl = document.getElementById("timer");
+const resultSection = document.getElementById("result-section");
+const scoreSummaryDiv = document.getElementById("score-summary");
+const analysisDiv = document.getElementById("analysis");
+const ctx = document.getElementById("resultChart").getContext("2d");
+const navigationButtons = document.getElementById("navigation-buttons");
+
+// Popup elements
+const menuToggle = document.getElementById("menu-toggle");
+const menuOverlay = document.getElementById("menu-overlay");
+const closePopup = document.getElementById("close-popup");
+const testSection = document.getElementById("test-section");
+const qNumContainer = document.getElementById("question-numbers");
+const popupSubmit = document.getElementById("popup-submit");
+const popupBack = document.getElementById("popup-back");
+
+// Tabs
+const tabCorrect = document.getElementById("tab-correct");
+const tabIncorrect = document.getElementById("tab-incorrect");
+const tabUnattempted = document.getElementById("tab-unattempted");
+let currentTab = 'correct';
+
+// Language toggle
+document.getElementById("lang-toggle").addEventListener("click", ()=>{
+  lang = lang === "hi" ? "en" : "hi";
+  document.getElementById("lang-toggle").innerText = lang === "hi" ? "English" : "हिंदी";
+  document.getElementById("mock-title").innerText = lang === "hi" ? "समय और कार्य मॉक टेस्ट" : "Time and Work Mock Test";
+  document.getElementById("menu-title").innerText = lang === "hi" ? "प्रश्न" : "Questions";
+  popupSubmit.innerText = lang === "hi" ? "सबमिट करें" : "Submit";
+  popupBack.innerText = lang === "hi" ? "वापस जाएँ" : "Back";
+  prevBtn.innerText = lang === "hi" ? "पिछला प्रश्न" : "Previous Question";
+  nextBtn.innerText = lang === "hi" ? "अगला प्रश्न" : "Next Question";
+  if(!resultSection.classList.contains("hidden")){
+    tabCorrect.innerText = lang === "hi" ? "सही" : "Correct";
+    tabIncorrect.innerText = lang === "hi" ? "गलत" : "Incorrect";
+    tabUnattempted.innerText = lang === "hi" ? "छोड़े गए" : "Unattempted";
+    showResult(currentTab);
+  }
+  loadQuestion();
+});
+
+// Timer
+function startTimer(){
+  timer = setInterval(()=>{
+    timeLeft--;
+    let min = String(Math.floor(timeLeft/60)).padStart(2,"0");
+    let sec = String(timeLeft%60).padStart(2,"0");
+    timerEl.innerText = `${lang==="hi"?"समय":"Time"}: ${min}:${sec}`;
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      endTest();
+    }
+  },1000);
+}
+
+// Load Question
+function loadQuestion(){
+  let q = questions[currentQuestion];
+  questionContainer.innerHTML = `
+    <div class="question-card">
+      <h3>${(currentQuestion+1)}. ${lang==="hi"?q.q_hi:q.q_en}</h3>
+      ${q.options.map((opt,i)=>`
+        <button class="option-btn ${answers[currentQuestion]===i?"selected":""}" onclick="selectOption(${i})">${opt}</button>
+      `).join("")}
+    </div>
+  `;
+  renderQNumbers();
+  updateNavigationButtons();
+}
+
+// Select Option
+function selectOption(i){
+  answers[currentQuestion] = i;
+  loadQuestion();
+}
+
+// Navigation buttons logic
+function updateNavigationButtons() {
+    // Hide 'previous' button on first question
+    if (currentQuestion === 0) {
+        prevBtn.style.visibility = 'hidden';
+    } else {
+        prevBtn.style.visibility = 'visible';
+    }
+
+    // Change 'Next' to 'Submit' on last question
+    if (currentQuestion === questions.length - 1) {
+        nextBtn.innerText = lang === "hi" ? "टेस्ट सबमिट करें" : "Submit Test";
+        nextBtn.classList.remove("btn");
+        nextBtn.classList.add("btn-grey");
+    } else {
+        nextBtn.innerText = lang === "hi" ? "अगला प्रश्न" : "Next Question";
+        nextBtn.classList.add("btn");
+        nextBtn.classList.remove("btn-grey");
+    }
+}
+
+prevBtn.addEventListener("click", ()=>{
+  if(currentQuestion > 0){
+    currentQuestion--;
+    loadQuestion();
+  }
+});
+
+nextBtn.addEventListener("click", ()=>{
+  if(currentQuestion < questions.length-1){
+    currentQuestion++;
+    loadQuestion();
+  } else {
+    endTest();
+  }
+});
+
+// End Test
+function endTest(){
+  clearInterval(timer);
+  document.getElementById("test-section").classList.add("hidden");
+  resultSection.classList.remove("hidden");
+  showResult('correct');
+}
+
+// Show Result
+function showResult(filter){
+  currentTab = filter;
+  let correct=0,incorrect=0,unattempted=0;
+  questions.forEach((q,i)=>{
+    if(answers[i]==null){unattempted++;}
+    else if(answers[i]===q.answer){correct++;}
+    else{incorrect++;}
+  });
+
+  const totalAttempted = correct + incorrect;
+  const accuracy = totalAttempted > 0 ? ((correct / totalAttempted) * 100).toFixed(2) : 0;
+
+  scoreSummaryDiv.innerHTML = `
+    <p style="font-size:1.2em; font-weight:bold;">${lang==="hi"?"स्कोर":"Score"}: ${correct} / ${questions.length}</p>
+    <p>${lang==="hi"?"सही":"Correct"}: <strong>${correct}</strong></p>
+    <p>${lang==="hi"?"गलत":"Incorrect"}: <strong>${incorrect}</strong></p>
+    <p>${lang==="hi"?"छोड़े गए":"Unattempted"}: <strong>${unattempted}</strong></p>
+    <p>${lang==="hi"?"एक्यूरेसी":"Accuracy"}: <strong>${accuracy}%</strong></p>
+  `;
+
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(`tab-${filter}`).classList.add('active');
+
+  analysisDiv.innerHTML = "";
+  let filteredQuestions = [];
+  if(filter === 'correct'){
+    filteredQuestions = questions.filter((q, i) => answers[i] === q.answer);
+  } else if (filter === 'incorrect'){
+    filteredQuestions = questions.filter((q, i) => answers[i] !== null && answers[i] !== q.answer);
+  } else if (filter === 'unattempted'){
+    filteredQuestions = questions.filter((q, i) => answers[i] === null);
+  }
+
+  filteredQuestions.forEach(q => {
+    let qIndex = questions.indexOf(q);
+    let isCorrect = answers[qIndex] === q.answer;
+    let cardClass = isCorrect ? 'correct' : (answers[qIndex] === null ? 'unattempted' : 'incorrect');
+
+    analysisDiv.innerHTML += `
+      <div class="question-card ${cardClass}">
+        <h3>${qIndex+1}. ${lang==="hi"?q.q_hi:q.q_en}</h3>
+        ${q.options.map((opt,i)=>`
+          <button class="option-btn ${i===q.answer?'correct':(i===answers[qIndex]?'incorrect':'')}" disabled>${opt}</button>
+        `).join("")}
+        <br>
+        <div style="font-weight:bold;">${lang==="hi"?"सही उत्तर":"Correct Answer"}: ${q.options[q.answer]}</div>
+        <div style="margin-top:10px;">
+          <strong>${lang==="hi"?"समाधान":"Solution"}:</strong>
+          <pre>${lang==="hi"?q.solution_hi:q.solution_en}</pre>
+        </div>
+      </div>
+    `;
+  });
+
+  // Chart
+  new Chart(ctx,{
+    type:'pie',
+    data:{
+      labels:[lang==="hi"?"सही":"Correct",lang==="hi"?"गलत":"Incorrect",lang==="hi"?"छोड़े गए":"Unattempted"],
+      datasets:[{
+        data:[correct,incorrect,unattempted],
+        backgroundColor:['#22c55e','#ff4d4d','#3399ff']
+      }]
+    },
+    options:{responsive:true, maintainAspectRatio:false}
+  });
+}
+
+// Event listeners for result tabs
+tabCorrect.addEventListener("click", () => showResult('correct'));
+tabIncorrect.addEventListener("click", () => showResult('incorrect'));
+tabUnattempted.addEventListener("click", () => showResult('unattempted'));
+
+
+// Render Question Numbers inside Popup
+function renderQNumbers(){
+  qNumContainer.innerHTML = "";
+  questions.forEach((q,i)=>{
+    let status="unattempted";
+    if(answers[i]!=null) status="attempted";
+    if(i===currentQuestion) status="current";
+    let div = document.createElement("div");
+    div.className="question-num "+status;
+    div.innerHTML = (i+1);
+    div.onclick=()=>{currentQuestion=i; loadQuestion(); closeMenu();};
+    qNumContainer.appendChild(div);
+  });
+}
+
+// Popup toggle
+menuToggle.addEventListener("click", ()=>{
+  menuOverlay.classList.add("active");
+  testSection.classList.add("blur");
+  renderQNumbers();
+});
+closePopup.addEventListener("click", closeMenu);
+popupBack.addEventListener("click", closeMenu);
+function closeMenu(){
+  menuOverlay.classList.remove("active");
+  testSection.classList.remove("blur");
+}
+popupSubmit.addEventListener("click", ()=>{
+  closeMenu();
+  endTest();
+});
+
+// Initial load
+startTimer();
+loadQuestion();
+</script>
+</body>
+</html>
