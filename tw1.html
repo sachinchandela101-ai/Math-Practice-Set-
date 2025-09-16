@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testbook App Clone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2196f3;
+            --dark-blue: #1976d2;
+            --green: #4caf50;
+            --red: #f44336;
+            --yellow: #ffc107;
+            --light-gray: #f5f5f5;
+            --medium-gray: #e0e0e0;
+            --dark-gray: #333;
+            --text-color: #555;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-left { 
+            display: flex; 
+            align-items: center; 
+            flex: 1;
+        }
+        .header-left .icon { 
+            font-size: 24px; 
+            margin-right: 15px; 
+            cursor: pointer; 
+        }
+        .header-title { 
+            font-size: 16px; 
+            font-weight: 500;
+        }
+        .header-right { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            flex-shrink: 0;
+        }
+        .header-right .timer-icon {
+            font-size: 16px;
+        }
+        .header-right .flag-icon {
+            font-size: 24px;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: space-around;
+            background-color: var(--dark-blue);
+            color: white;
+        }
+        .nav-tab {
+            padding: 15px 0;
+            text-align: center;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 500;
+            opacity: 0.7;
+        }
+        .nav-tab.active {
+            opacity: 1;
+            border-bottom: 3px solid white;
+        }
+        .nav-tabs.sub-tabs { background-color: #fff; color: var(--text-color); border-bottom: 1px solid var(--medium-gray); }
+        .nav-tabs.sub-tabs .nav-tab.active { border-color: var(--primary-blue); color: var(--primary-blue); }
+        .nav-tabs-container {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 20px;
+            flex-grow: 1;
+            background-color: #fff;
+            padding-bottom: 100px; /* Add space for fixed button bar */
+        }
+        .question-box {
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--light-gray);
+        }
+        .question-text {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        .options-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .options-list li {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--medium-gray);
+        }
+        .options-list li:hover { background-color: var(--light-gray); }
+        .options-list li.selected { background-color: var(--light-blue); border-color: var(--primary-blue); }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: #fff;
+            border-top: 1px solid var(--medium-gray);
+            gap: 10px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .action-buttons button {
+            flex: 1;
+            padding: 12px 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #mark-next-btn { background-color: var(--yellow); color: white; }
+        #clear-btn { background-color: var(--medium-gray); color: var(--dark-gray); }
+        #save-next-btn { background-color: var(--primary-blue); color: white; }
+
+        /* Analysis & Solutions View */
+        .solution-list-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--light-gray);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .solution-list-item .status-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--green);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-right: 15px;
+        }
+        .solution-list-item.incorrect .status-icon { background-color: var(--red); }
+        .solution-list-item.unattempted .status-icon { background-color: var(--medium-gray); }
+
+        .solution-details {
+            border-top: 1px solid var(--medium-gray);
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        .solution-details h4 { margin: 0 0 10px; }
+        .solution-details ul { margin: 0; padding-left: 20px; }
+        
+        /* Analysis view */
+        .analysis-summary { text-align: center; margin-top: 20px; }
+        .analysis-summary h3 { margin-bottom: 5px; }
+        .analysis-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .analysis-stat-item {
+            text-align: center;
+            font-size: 14px;
+        }
+        .analysis-stat-item .value { font-size: 24px; font-weight: 700; }
+        .analysis-stat-item .correct .value { color: var(--green); }
+        .analysis-stat-item .incorrect .value { color: var(--red); }
+        .analysis-stat-item .unattempted .value { color: var(--dark-gray); }
+        
+        /* Modals (Menu) */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+        }
+        .modal.visible { display: block; }
+        
+        .modal-content {
+            background-color: white;
+            width: 80%;
+            height: 100%;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .modal.visible .modal-content { transform: translateX(0); }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        .q-nav-bar {
+            padding: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            justify-items: center;
+        }
+        .q-nav-bar .q-status {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--medium-gray);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .q-nav-bar .q-status.attempted { background-color: var(--primary-blue); }
+        .q-nav-bar .q-status.marked { border: 2px solid var(--yellow); background-color: #fff; color: var(--yellow); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <span class="icon" id="menu-btn">&#9776;</span>
+                <span class="header-title">MP Police Constable Full Test 10</span>
+            </div>
+            <div class="header-right">
+                <span class="timer-icon">&#x231a;</span>
+                <span id="timer">00:00</span>
+                <span class="flag-icon">&#x1f1ee;&#x1f1f3;</span>
+            </div>
+        </div>
+
+        <div class="nav-tabs-container hidden" id="tabs-container">
+            <div class="nav-tabs">
+                <div class="nav-tab active" data-tab="test">Test</div>
+                <div class="nav-tab" data-tab="solutions">Solutions</div>
+                <div class="nav-tab" data-tab="analysis">Analysis</div>
+                <div class="nav-tab" id="filter-tab">Filters</div>
+            </div>
+        </div>
+        
+        <div class="main-content" id="main-content">
+            </div>
+
+        <div class="action-buttons" id="action-buttons">
+            <button id="mark-next-btn">Mark & Next</button>
+            <button id="clear-btn">Clear</button>
+            <button id="save-next-btn">Save & Next</button>
+        </div>
+
+        <div class="modal" id="q-nav-modal">
+            <div class="modal-content">
+                <span class="modal-close">&times;</span>
+                <div class="q-nav-bar" id="q-nav-bar"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const questionsData = [
+            { id: 1, text: 'Which city will hold the 23rd edition of India International Seafood Show (IISS) in 2023?', options: ['Mumbai', 'Chennai', 'Kolkata', 'Jaipur'], correct: 'Kolkata', solution: 'Kolkata will hold the 23rd edition of India International Seafood Show (IISS) from February 15-17, 2023. It will be organised by the Marine Products Export Development Authority (MPEDA), in association with the Seafood Exporters Association of India (SEAI).' },
+            { id: 2, text: 'पगारा बाँध कहाँ स्थित है?', options: ['मध्य प्रदेश', 'उत्तर प्रदेश', 'राजस्थान', 'गुजरात'], correct: 'मध्य प्रदेश', solution: 'पगारा बाँध मध्य प्रदेश के मुरैना जिले में स्थित है। यह आसन नदी पर बनाया गया है।' },
+            { id: 3, text: 'नाथ पंथ के प्रवर्तक कौन थे?', options: ['गुरु गोरखनाथ', 'मत्स्येन्द्रनाथ', 'जालंधरनाथ', 'आदिनाथ'], correct: 'मत्स्येन्द्रनाथ', solution: 'नाथ संप्रदाय एक शैव संप्रदाय है, जिसके प्रवर्तक मत्स्येन्द्रनाथ थे।' },
+            { id: 4, text: 'रिहंद नदी घाटी परियोजना कहाँ है?', options: ['मध्य प्रदेश', 'उत्तर प्रदेश', 'बिहार', 'ओडिशा'], correct: 'उत्तर प्रदेश', solution: 'रिहंद नदी घाटी परियोजना, जिसे गोविंद वल्लभ पंत सागर परियोजना के नाम से भी जाना जाता है, उत्तर प्रदेश में स्थित है। यह भारत की सबसे बड़ी बहुउद्देशीय परियोजनाओं में से एक है।' },
+            { id: 5, text: 'विश्व वन्यजीव दिवस कब मनाया जाता है?', options: ['3 मार्च', '5 जून', '21 मार्च', '10 अगस्त'], correct: '3 मार्च', solution: 'विश्व वन्यजीव दिवस हर साल 3 मार्च को मनाया जाता है ताकि विश्व के वन्य जीवों और वनस्पतियों के बारे में जागरूकता बढ़ाई जा सके।' },
+            { id: 6, text: 'बाल-विवाह प्रतिषेध अधिनियम (Child Marriage Restraint Act) किस वर्ष लागू हुआ?', options: ['1929', '1955', '1976', '2006'], correct: '1929', solution: 'बाल-विवाह प्रतिषेध अधिनियम, जिसे शारदा अधिनियम के नाम से भी जाना जाता है, 1929 में पारित किया गया था। यह कानून 1 अप्रैल 1930 को लागू हुआ था।' }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userResponses = questionsData.map(() => ({ answer: null, status: 'unattempted', markedForReview: false }));
+        let timeElapsed = 0;
+        let timerInterval;
+
+        const mainContent = document.getElementById('main-content');
+        const qNavBar = document.getElementById('q-nav-bar');
+        const actionButtons = document.getElementById('action-buttons');
+        const navTabsContainer = document.getElementById('tabs-container');
+        const qNavModal = document.getElementById('q-nav-modal');
+        const menuBtn = document.getElementById('menu-btn');
+        const closeBtn = document.querySelector('.modal-close');
+        
+        const timerDisplay = document.getElementById('timer');
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeElapsed++;
+                const minutes = Math.floor(timeElapsed / 60);
+                const seconds = timeElapsed % 60;
+                timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            }, 1000);
+        }
+
+        function renderQuestionNav() {
+            qNavBar.innerHTML = '';
+            userResponses.forEach((res, index) => {
+                const qStatus = document.createElement('div');
+                qStatus.className = 'q-status';
+                qStatus.textContent = index + 1;
+                qStatus.dataset.index = index;
+                
+                if (res.status === 'attempted') {
+                    qStatus.classList.add('attempted');
+                }
+                if (res.markedForReview) {
+                    qStatus.classList.add('marked');
+                }
+                if (index === currentQuestionIndex && res.status !== 'attempted' && !res.markedForReview) {
+                     qStatus.style.border = '2px solid black';
+                }
+
+                qStatus.addEventListener('click', () => {
+                    currentQuestionIndex = index;
+                    renderView('test');
+                    qNavModal.classList.remove('visible');
+                });
+                qNavBar.appendChild(qStatus);
+            });
+        }
+
+        function renderTestView() {
+            mainContent.innerHTML = '';
+            const question = questionsData[currentQuestionIndex];
+            const response = userResponses[currentQuestionIndex];
+
+            const questionHTML = `
+                <div class="question-box">
+                    <p class="question-text">${question.id}. ${question.text}</p>
+                    <ul class="options-list">
+                        ${question.options.map((opt, i) => `<li>${i + 1}. ${opt}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            mainContent.innerHTML = questionHTML;
+            actionButtons.classList.remove('hidden');
+
+            const optionsList = mainContent.querySelectorAll('li');
+            optionsList.forEach((option, i) => {
+                if (response.answer === option.textContent.substring(3)) {
+                    option.classList.add('selected');
+                }
+
+                option.addEventListener('click', () => {
+                    optionsList.forEach(li => li.classList.remove('selected'));
+                    option.classList.add('selected');
+                    response.answer = option.textContent.substring(3);
+                });
+            });
+        }
+        
+        function renderSolutionsView() {
+            mainContent.innerHTML = '';
+            actionButtons.classList.add('hidden');
+            
+            questionsData.forEach((q, index) => {
+                const res = userResponses[index];
+                const item = document.createElement('div');
+                item.className = `solution-list-item ${res.status}`;
+                
+                const icon = document.createElement('div');
+                icon.className = 'status-icon';
+                icon.innerHTML = res.status === 'correct' ? '&#x2713;' : res.status === 'incorrect' ? '&#x2715;' : q.id;
+                
+                const content = document.createElement('div');
+                content.innerHTML = `<p><b>Q.${q.id}</b> ${q.text}</p>`;
+
+                item.appendChild(icon);
+                item.appendChild(content);
+                mainContent.appendChild(item);
+
+                // Add solution details on click
+                item.addEventListener('click', () => {
+                    const existingDetails = item.querySelector('.solution-details');
+                    if (existingDetails) {
+                        existingDetails.remove();
+                    } else {
+                        const details = document.createElement('div');
+                        details.className = 'solution-details';
+                        details.innerHTML = `
+                            <h4>सही उत्तर: ${q.correct}</h4>
+                            <p><b>हल:</b><br>${q.solution}</p>
+                        `;
+                        item.appendChild(details);
+                    }
+                });
+            });
+        }
+        
+        function renderAnalysisView() {
+            mainContent.innerHTML = '';
+            actionButtons.classList.add('hidden');
+            
+            let correct = userResponses.filter(r => r.status === 'correct').length;
+            let incorrect = userResponses.filter(r => r.status === 'incorrect').length;
+            let unattempted = userResponses.filter(r => r.status === 'unattempted').length;
+            let total = questionsData.length;
+            let score = (correct * 1) - (incorrect * 0.25);
+            let accuracy = total > 0 ? (correct / total) * 100 : 0;
+            
+            const analysisHTML = `
+                <div class="analysis-summary">
+                    <h3>Analysis</h3>
+                    <p>स्कोर: ${score.toFixed(2)} / ${total}</p>
+                    <p>सटीकता: ${accuracy.toFixed(2)}%</p>
+                </div>
+                <div class="analysis-stats">
+                    <div class="analysis-stat-item correct">
+                        <span class="value">${correct}</span>
+                        <p>Correct</p>
+                    </div>
+                    <div class="analysis-stat-item incorrect">
+                        <span class="value">${incorrect}</span>
+                        <p>Incorrect</p>
+                    </div>
+                    <div class="analysis-stat-item unattempted">
+                        <span class="value">${unattempted}</span>
+                        <p>Unattempted</p>
+                    </div>
+                </div>
+            `;
+            mainContent.innerHTML = analysisHTML;
+        }
+
+        function renderView(viewName) {
+            navTabsContainer.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            const selectedTab = document.querySelector(`.nav-tab[data-tab="${viewName}"]`);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            if (viewName === 'test') {
+                renderTestView();
+            } else if (viewName === 'solutions') {
+                renderSolutionsView();
+            } else if (viewName === 'analysis') {
+                renderAnalysisView();
+            }
+            renderQuestionNav();
+        }
+
+        function calculateScores() {
+            userResponses.forEach((res, index) => {
+                if (res.answer) {
+                    if (res.answer === questionsData[index].correct) {
+                        res.status = 'correct';
+                    } else {
+                        res.status = 'incorrect';
+                    }
+                } else {
+                    res.status = 'unattempted';
+                }
+            });
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const tabName = e.target.dataset.tab;
+                if (tabName) {
+                    renderView(tabName);
+                }
+            });
+        });
+
+        menuBtn.addEventListener('click', () => {
+            qNavModal.classList.add('visible');
+            renderQuestionNav();
+        });
+
+        closeBtn.addEventListener('click', () => {
+            qNavModal.classList.remove('visible');
+        });
+        
+        qNavModal.addEventListener('click', (e) => {
+            if (e.target.id === 'q-nav-modal') {
+                qNavModal.classList.remove('visible');
+            }
+        });
+
+        saveNextBtn.addEventListener('click', () => {
+            if (userResponses[currentQuestionIndex].answer) {
+                userResponses[currentQuestionIndex].status = 'attempted';
+            }
+            if (currentQuestionIndex < questionsData.length - 1) {
+                currentQuestionIndex++;
+                renderView('test');
+            } else {
+                if (confirm("क्या आप टेस्ट सबमिट करना चाहते हैं?")) {
+                    navTabsContainer.classList.remove('hidden');
+                    calculateScores();
+                    renderView('analysis');
+                }
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            userResponses[currentQuestionIndex].answer = null;
+            userResponses[currentQuestionIndex].status = 'unattempted';
+            renderView('test');
+        });
+
+        markNextBtn.addEventListener('click', () => {
+            userResponses[currentQuestionIndex].markedForReview = !userResponses[currentQuestionIndex].markedForReview;
+            if (currentQuestionIndex < questionsData.length - 1) {
+                currentQuestionIndex++;
+                renderView('test');
+            } else {
+                renderQuestionNav(); // Update status on last question
+            }
+        });
+        
+        // Initial render
+        startTimer();
+        renderView('test');
+    </script>
+</body>
+</html>
