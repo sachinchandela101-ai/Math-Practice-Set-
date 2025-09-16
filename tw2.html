@@ -158,62 +158,6 @@ let questions = [
     solution_en: "P's 1 day's work = 1/15, Q's 1 day's work = 1/20.\nWork in 2 days (P+Q) = 1/15 + 1/20 = 7/60.\nIn 16 days (8 pairs), work done = 8 * (7/60) = 56/60.\nRemaining work = 1 - 56/60 = 4/60 = 1/15.\nOn the 17th day, P works and completes the remaining work (1/15). \nTotal days = 16 + 1 = 17 days."
   },
   {
-    q_hi: "A, B की तुलना में 50% कम कुशल है। यदि A और B मिलकर एक कार्य को 18 दिनों में पूरा कर सकते हैं, तो B अकेले उस कार्य को कितने दिनों में करेगा?",
-    q_en: "A is 50% less efficient than B. If A and B together can complete a work in 18 days, in how many days will B alone complete the work?",
-    options: ["27 दिन", "30 दिन", "36 दिन", "45 दिन"],
-    answer: 0,
-    solution_hi: "A की कार्यक्षमता B से 50% कम है, तो कार्यक्षमता का अनुपात A : B = 1 : 2।\nदोनों की संयुक्त कार्यक्षमता = 1 + 2 = 3 इकाई/दिन।\nकुल कार्य = 3 इकाई/दिन * 18 दिन = 54 इकाई।\nB को अकेले कार्य पूरा करने में लगा समय = 54 / 2 = 27 दिन।",
-    solution_en: "A is 50% less efficient than B. So, efficiency ratio A:B = 1:2.\nCombined efficiency = 1 + 2 = 3 units/day.\nTotal work = 3 units/day * 18 days = 54 units.\nTime for B alone = 54 / 2 = 27 days."
-  },
-  {
-    q_hi: "A, B और C क्रमशः 20, 30 और 60 दिनों में एक कार्य पूरा कर सकते हैं। वे एक साथ काम करना शुरू करते हैं। 3 दिन बाद A काम छोड़ देता है, और उसके 3 दिन बाद B भी छोड़ देता है। शेष कार्य को C कितने दिनों में पूरा करेगा?",
-    q_en: "A, B and C can complete a work in 20, 30 and 60 days respectively. They start working together. After 3 days, A leaves, and after another 3 days, B also leaves. In how many days will C complete the remaining work?",
-    options: ["10 दिन", "12 दिन", "15 दिन", "18 दिन"],
-    answer: 2,
-    solution_hi: "कुल कार्य = LCM(20, 30, 60) = 60 इकाई।\nA की कार्यक्षमता = 3, B की = 2, C की = 1 इकाई/दिन।\nपहले 3 दिन में (A+B+C) द्वारा किया गया कार्य = 3 * (3+2+1) = 3 * 6 = 18 इकाई।\nअगले 3 दिन में (B+C) द्वारा किया गया कार्य = 3 * (2+1) = 3 * 3 = 9 इकाई।\nकिया गया कुल कार्य = 18 + 9 = 27 इकाई।\nशेष कार्य = 60 - 27 = 33 इकाई।\nC को शेष कार्य पूरा करने में लगा समय = 33 / 1 = 33 दिन।",
-    solution_en: "Total work = LCM(20, 30, 60) = 60 units.\nA's efficiency = 3, B's = 2, C's = 1 units/day.\nWork done by (A+B+C) in first 3 days = 3 * (3+2+1) = 18 units.\nWork done by (B+C) in next 3 days = 3 * (2+1) = 9 units.\nTotal work done = 18 + 9 = 27 units.\nRemaining work = 60 - 27 = 33 units.\nTime for C to complete remaining work = 33 / 1 = 33 days."
-  },
-  {
-    q_hi: "A और B मिलकर एक कार्य को 12 दिनों में, B और C 15 दिनों में, और C और A 20 दिनों में कर सकते हैं। B अकेले उस कार्य को कितने दिनों में करेगा?",
-    q_en: "A and B together can do a work in 12 days, B and C in 15 days, and C and A in 20 days. In how many days will B alone do the work?",
-    options: ["20 दिन", "24 दिन", "30 दिन", "40 दिन"],
-    answer: 0,
-    solution_hi: "A+B का 1 दिन का कार्य = 1/12, B+C का = 1/15, C+A का = 1/20।\n2(A+B+C) का 1 दिन का कार्य = 1/12 + 1/15 + 1/20 = (5+4+3)/60 = 12/60 = 1/5।\n(A+B+C) का 1 दिन का कार्य = 1/10।\nB का 1 दिन का कार्य = (A+B+C) का कार्य - (A+C) का कार्य = 1/10 - 1/20 = (2-1)/20 = 1/20।\nअतः B अकेले 20 दिनों में कार्य पूरा करेगा।",
-    solution_en: "A+B's 1 day's work = 1/12, B+C's = 1/15, C+A's = 1/20.\n2(A+B+C)'s 1 day's work = 1/12 + 1/15 + 1/20 = (5+4+3)/60 = 12/60 = 1/5.\n(A+B+C)'s 1 day's work = 1/10.\nB's 1 day's work = (A+B+C)'s work - (A+C)'s work = 1/10 - 1/20 = (2-1)/20 = 1/20.\nSo B alone will complete the work in 20 days."
-  },
-  {
-    q_hi: "12 पुरुष एक कार्य को 18 दिनों में पूरा कर सकते हैं। 6 दिनों के बाद, 4 पुरुष काम छोड़ देते हैं। शेष पुरुषों को बचा हुआ कार्य पूरा करने में कितने और दिन लगेंगे?",
-    q_en: "12 men can complete a work in 18 days. After 6 days, 4 men leave. How many more days will it take for the remaining men to finish the work?",
-    options: ["12 दिन", "15 दिन", "18 दिन", "20 दिन"],
-    answer: 2,
-    solution_hi: "कुल कार्य = 12 पुरुष * 18 दिन = 216 इकाई।\n12 पुरुषों द्वारा 6 दिनों में किया गया कार्य = 12 * 6 = 72 इकाई।\nशेष कार्य = 216 - 72 = 144 इकाई।\nशेष पुरुष = 12 - 4 = 8।\nशेष कार्य को पूरा करने में लगा समय = 144 / 8 = 18 दिन।",
-    solution_en: "Total work = 12 men * 18 days = 216 units.\nWork done by 12 men in 6 days = 12 * 6 = 72 units.\nRemaining work = 216 - 72 = 144 units.\nRemaining men = 12 - 4 = 8.\nTime to complete the remaining work = 144 / 8 = 18 days."
-  },
-  {
-    q_hi: "A और B मिलकर एक कार्य को 15 दिनों में कर सकते हैं। उन्होंने 5 दिनों तक एक साथ काम किया, और फिर B चला गया। यदि A ने शेष कार्य को 10 दिनों में पूरा किया, तो A अकेले उस कार्य को कितने दिनों में करेगा?",
-    q_en: "A and B can do a work in 15 days. They worked together for 5 days, and then B left. If A completed the remaining work in 10 days, in how many days will A alone do the work?",
-    options: ["15 दिन", "18 दिन", "20 दिन", "25 दिन"],
-    answer: 2,
-    solution_hi: "A और B ने 5 दिनों में 5/15 = 1/3 काम किया।\nशेष काम = 1 - 1/3 = 2/3।\nयह 2/3 काम A ने 10 दिनों में पूरा किया।\nतो A को पूरा काम करने में लगा समय = 10 * (3/2) = 15 दिन।",
-    solution_en: "Work done by A and B in 5 days = 5/15 = 1/3.\nRemaining work = 1 - 1/3 = 2/3.\nThis 2/3 work was completed by A in 10 days.\nTime taken by A to complete the whole work = 10 * (3/2) = 15 days."
-  },
-  {
-    q_hi: "एक ठेकेदार ने एक सड़क 120 दिनों में बनाने का ठेका लिया और 80 मजदूरों को काम पर लगाया। 40 दिनों के बाद, उसे पता चला कि केवल 1/4 काम पूरा हुआ है। काम को समय पर पूरा करने के लिए उसे और कितने मजदूरों को काम पर लगाना चाहिए?",
-    q_en: "A contractor undertook to build a road in 120 days and employed 80 workers. After 40 days, he found that only 1/4 of the work was completed. How many more workers should he employ to finish the work on time?",
-    options: ["30 मजदूर", "40 मजदूर", "50 मजदूर", "60 मजदूर"],
-    answer: 1,
-    solution_hi: "M1*D1/W1 = M2*D2/W2\n80 * 40 / (1/4) = X * (120-40) / (1-1/4)\n3200 / (1/4) = X * 80 / (3/4)\n12800 = X * 320/3\nX = 12800 * 3 / 320 = 40 * 3 = 120\nअतिरिक्त मजदूर = 120 - 80 = 40 मजदूर।",
-    solution_en: "M1*D1/W1 = M2*D2/W2. 80 * 40 / (1/4) = X * (120-40) / (3/4). 3200 / (1/4) = X * 80 / (3/4). 12800 = X * 320/3. X = 120. Additional workers = 120 - 80 = 40 workers."
-  },
-  {
-    q_hi: "A, B और C मिलकर एक कार्य को 6 दिनों में पूरा कर सकते हैं। यदि A अकेले इसे 18 दिनों में कर सकता है और B अकेले इसे 12 दिनों में कर सकता है, तो C अकेले इसे कितने दिनों में करेगा?",
-    q_en: "A, B, and C can complete a work in 6 days. If A alone can do it in 18 days and B alone in 12 days, in how many days will C alone do it?",
-    options: ["30 दिन", "36 दिन", "40 दिन", "45 दिन"],
-    answer: 1,
-    solution_hi: "(A+B+C) का 1 दिन का कार्य = 1/6।\nA का 1 दिन का कार्य = 1/18।\nB का 1 दिन का कार्य = 1/12।\nC का 1 दिन का कार्य = 1/6 - (1/18 + 1/12) = 1/6 - (2+3)/36 = 1/6 - 5/36 = (6-5)/36 = 1/36।\nअतः C अकेले 36 दिनों में कार्य करेगा।",
-    solution_en: "(A+B+C)'s 1 day's work = 1/6.\nA's 1 day's work = 1/18.\nB's 1 day's work = 1/12.\nC's 1 day's work = 1/6 - (1/18 + 1/12) = 1/6 - (2+3)/36 = 1/6 - 5/36 = (6-5)/36 = 1/36.\nSo C alone will do the work in 36 days."
-  },
-  {
     q_hi: "A, B की तुलना में 4 गुना तेज़ है। यदि A और B मिलकर एक कार्य को 16 दिनों में कर सकते हैं, तो B अकेले उस कार्य को कितने दिनों में करेगा?",
     q_en: "A is 4 times as fast as B. If A and B together can complete a work in 16 days, in how many days will B alone complete the work?",
     options: ["20 दिन", "40 दिन", "60 दिन", "80 दिन"],
