@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Static Mock Test with Timer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fa; }
+    .container { max-width: 700px; margin: auto; padding: 20px; }
+    .card { background: #fff; padding: 20px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    button { padding: 10px 15px; margin: 5px; border: none; border-radius: 6px; cursor: pointer; }
+    .btn { background: #007bff; color: white; }
+    .btn-grey { background: #666; color: white; }
+    .hidden { display: none; }
+    .timer { font-size: 18px; font-weight: bold; color: #d9534f; margin-bottom: 15px; }
+
+    .tabs { display: flex; justify-content: space-around; margin: 15px 0; }
+    .tab { flex: 1; text-align: center; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .tab.correct { background: #d4f8d4; color: green; }
+    .tab.incorrect { background: #ffd6d6; color: red; }
+    .tab.unattempted { background: #d6ecff; color: #0057b8; }
+    .tab.active { border: 2px solid #333; }
+
+    .question-card { margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; padding: 15px; background: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Mock Test Section -->
+    <div id="test-section" class="card">
+      <div class="timer">⏳ Time Left: <span id="timer">10:00</span></div>
+      <h2 id="question-text">Loading Question...</h2>
+      <div id="options"></div>
+      <div style="margin-top: 15px;">
+        <button id="prev-btn" class="btn-grey">Previous</button>
+        <button id="next-btn" class="btn">Next</button>
+        <button id="submit-btn" class="btn hidden">Submit</button>
+      </div>
+    </div>
+
+    <!-- Result Section -->
+    <div id="result-section" class="hidden">
+      <div class="card">
+        <h2>Analysis</h2>
+        <p><b>Score:</b> <span id="score"></span></p>
+        <p><b>Correct:</b> <span id="correct"></span></p>
+        <p><b>Incorrect:</b> <span id="incorrect"></span></p>
+        <p><b>Unattempted:</b> <span id="unattempted"></span></p>
+        <p><b>Accuracy:</b> <span id="accuracy"></span>%</p>
+        <p><b>Time Taken:</b> <span id="time-taken"></span></p>
+      </div>
+
+      <div class="card">
+        <canvas id="resultChart"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>Solutions</h2>
+        <div class="tabs">
+          <div class="tab correct active" data-type="correct">Correct</div>
+          <div class="tab incorrect" data-type="incorrect">Incorrect</div>
+          <div class="tab unattempted" data-type="unattempted">Unattempted</div>
+        </div>
+        <div id="solution-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Questions Array
+    const questions = [
+      {
+        q: "Who wrote the National Anthem of India?",
+        options: ["Rabindranath Tagore", "Mahatma Gandhi", "Bankim Chandra Chatterjee", "Subhash Chandra Bose"],
+        correct: 0,
+        userAnswer: null
+      },
+      {
+        q: "Which planet is known as the Red Planet?",
+        options: ["Mars", "Venus", "Jupiter", "Saturn"],
+        correct: 0,
+        userAnswer: null
+      },
+      {
+        q: "Largest planet in Solar System?",
+        options: ["Earth", "Mars", "Jupiter", "Venus"],
+        correct: 2,
+        userAnswer: null
+      }
+    ];
+
+    let currentQ = 0;
+    let totalTime = 10 * 60; // 10 minutes in seconds
+    let timeLeft = totalTime;
+    let timerInterval;
+
+    const qText = document.getElementById("question-text");
+    const optionsDiv = document.getElementById("options");
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const submitBtn = document.getElementById("submit-btn");
+    const timerDisplay = document.getElementById("timer");
+
+    function loadQuestion() {
+      let q = questions[currentQ];
+      qText.innerText = `Q${currentQ+1}. ${q.q}`;
+      optionsDiv.innerHTML = "";
+      q.options.forEach((opt, i) => {
+        let btn = document.createElement("button");
+        btn.innerText = opt;
+        btn.className = "btn";
+        btn.style.display = "block";
+        btn.style.marginBottom = "8px";
+        if (q.userAnswer === i) btn.style.background = "green";
+        btn.onclick = () => {
+          q.userAnswer = i;
+          loadQuestion();
+        };
+        optionsDiv.appendChild(btn);
+      });
+
+      prevBtn.style.display = currentQ === 0 ? "none" : "inline-block";
+      nextBtn.style.display = currentQ === questions.length - 1 ? "none" : "inline-block";
+      submitBtn.classList.toggle("hidden", currentQ !== questions.length - 1);
+    }
+
+    prevBtn.onclick = () => { currentQ--; loadQuestion(); };
+    nextBtn.onclick = () => { currentQ++; loadQuestion(); };
+    submitBtn.onclick = showResult;
+
+    // Timer
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        timerDisplay.innerText = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          showResult();
+        }
+      }, 1000);
+    }
+
+    function showResult() {
+      clearInterval(timerInterval);
+      document.getElementById("test-section").classList.add("hidden");
+      document.getElementById("result-section").classList.remove("hidden");
+
+      let correct = 0, incorrect = 0, unattempted = 0;
+      questions.forEach(q => {
+        if (q.userAnswer === null) unattempted++;
+        else if (q.userAnswer === q.correct) correct++;
+        else incorrect++;
+      });
+
+      let score = correct * 2.5; // Example: 2.5 marks per correct
+      let accuracy = (correct / (correct + incorrect)) * 100 || 0;
+      let timeTaken = totalTime - timeLeft;
+      let minutes = Math.floor(timeTaken / 60);
+      let seconds = timeTaken % 60;
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("correct").innerText = correct;
+      document.getElementById("incorrect").innerText = incorrect;
+      document.getElementById("unattempted").innerText = unattempted;
+      document.getElementById("accuracy").innerText = accuracy.toFixed(1);
+      document.getElementById("time-taken").innerText = `${minutes}m ${seconds}s`;
+
+      new Chart(document.getElementById("resultChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Correct", "Incorrect", "Unattempted"],
+          datasets: [{
+            data: [correct, incorrect, unattempted],
+            backgroundColor: ["green", "red", "#00bfff"]
+          }]
+        }
+      });
+
+      // Solutions
+      const solutionList = document.getElementById("solution-list");
+      solutionList.innerHTML = "";
+      questions.forEach((q, i) => {
+        let div = document.createElement("div");
+        div.className = "question-card";
+        if (q.userAnswer === null) div.classList.add("unattempted");
+        else if (q.userAnswer === q.correct) div.classList.add("correct");
+        else div.classList.add("incorrect");
+
+        div.innerHTML = `<b>Q${i+1}. ${q.q}</b>`;
+        q.options.forEach((opt, j) => {
+          let mark = "";
+          if (j === q.correct) mark = " ✅";
+          if (j === q.userAnswer && j !== q.correct) mark = " ❌";
+          div.innerHTML += `<p>${j+1}. ${opt}${mark}</p>`;
+        });
+        solutionList.appendChild(div);
+      });
+
+      // Tab filter logic
+      const tabs = document.querySelectorAll(".tab");
+      const questionsDivs = document.querySelectorAll(".question-card");
+
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          tabs.forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+          let type = tab.dataset.type;
+          questionsDivs.forEach(q => {
+            q.style.display = q.classList.contains(type) ? "block" : "none";
+          });
+        });
+      });
+
+      // Default show "correct"
+      questionsDivs.forEach(q => {
+        if (!q.classList.contains("correct")) q.style.display = "none";
+      });
+    }
+
+    loadQuestion();
+    startTimer();
+  </script>
+</body>
+</html>
