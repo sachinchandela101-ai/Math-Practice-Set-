@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock Test</title>
+  <style>
+    :root {
+      --blue: #2196f3;
+      --orange: #ff9800;
+      --white: #fff;
+      --gray: #ccc;
+      --light-blue: #e3f2fd;
+    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f9f9f9; }
+    header { background: var(--blue); color: white; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { font-size: 18px; margin: 0; }
+    .tabs { display: flex; border-bottom: 1px solid #ddd; background: #eee; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: #eee; cursor: pointer; }
+    .tab-btn.active { border-bottom: 3px solid var(--blue); font-weight: bold; background: #fff; }
+    .tab-content { display: none; padding: 15px; }
+    .tab-content.active { display: block; }
+    .question-footer { display: flex; justify-content: space-between; margin-top: 20px; }
+    button { cursor: pointer; border: none; padding: 10px 15px; border-radius: 5px; }
+    .prev-btn { background: #777; color: white; }
+    .next-btn { background: var(--blue); color: white; }
+    #menu-btn { background: white; color: var(--blue); font-size: 20px; padding: 5px 10px; border-radius: 5px; }
+    /* Modal */
+    #menu-modal { display: none; position: fixed; top: 0; right: 0; width: 280px; height: 100%; background: white; box-shadow: -2px 0 5px rgba(0,0,0,0.2); padding: 15px; z-index: 1000; overflow-y: auto; }
+    #menu-modal h3 { margin-top: 0; }
+    .q-bubbles { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+    .q-bubbles button { width: 35px; height: 35px; border-radius: 50%; border: none; }
+    .answered { background: var(--blue); color: white; }
+    .current { background: var(--orange); color: white; }
+    .not-visited { background: var(--gray); color: white; }
+    .not-attempted { background: var(--white); border: 1px solid var(--gray); }
+    .legend { margin-top: 15px; }
+    .legend div { display: flex; align-items: center; margin-bottom: 5px; font-size: 14px; }
+    .legend span { display: inline-block; width: 18px; height: 18px; border-radius: 50%; margin-right: 6px; }
+    #submit-btn-menu { margin-top: 15px; background: green; color: white; width: 100%; }
+    .options-list { list-style: none; padding: 0; }
+    .options-list li { padding: 10px; margin: 6px 0; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; }
+    .options-list li.selected { background: var(--light-blue); border-color: var(--blue); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mock Test</h1>
+    <div id="timer">00:00</div>
+    <button id="menu-btn">☰</button>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="test">Test</button>
+  </div>
+
+  <div id="test" class="tab-content active">
+    <div id="question-container"></div>
+    <div class="question-footer">
+      <button id="prev-btn" class="prev-btn">Previous</button>
+      <button id="next-btn" class="next-btn">Save & Next</button>
+    </div>
+  </div>
+
+  <div id="solutions" class="tab-content"></div>
+  <div id="analysis" class="tab-content"></div>
+
+  <!-- Menu Modal -->
+  <div id="menu-modal">
+    <h3>Questions</h3>
+    <div class="q-bubbles" id="q-bubbles"></div>
+    <div class="legend">
+      <div><span style="background: var(--blue);"></span>Answered</div>
+      <div><span style="background: var(--orange);"></span>Current</div>
+      <div><span style="background: var(--white); border:1px solid var(--gray);"></span>Not Attempted</div>
+    </div>
+    <button id="submit-btn-menu">Submit Test</button>
+  </div>
+
+<script>
+const questions = [
+  {q:"What is the capital of India?", options:["Mumbai","Delhi","Kolkata","Chennai"], ans:"Delhi"},
+  {q:"Which planet is known as the Red Planet?", options:["Mars","Venus","Jupiter","Saturn"], ans:"Mars"},
+  {q:"Who wrote the National Anthem of India?", options:["Rabindranath Tagore","Mahatma Gandhi","Bankim Chandra Chatterjee","Subhash Chandra Bose"], ans:"Rabindranath Tagore"}
+];
+
+let current = 0;
+let responses = Array(questions.length).fill(null);
+
+// Elements
+const qContainer = document.getElementById("question-container");
+const prevBtn = document.getElementById("prev-btn");
+const nextBtn = document.getElementById("next-btn");
+const menuBtn = document.getElementById("menu-btn");
+const modal = document.getElementById("menu-modal");
+const bubbles = document.getElementById("q-bubbles");
+
+// Load question
+function loadQuestion(i){
+  let q = questions[i];
+  let resp = responses[i];
+  qContainer.innerHTML = `<h2>Q${i+1}. ${q.q}</h2><ul class="options-list">${q.options.map((o,idx)=>`<li data-opt="${o}" class="${resp && resp.answer===o?'selected':''}">${idx+1}. ${o}</li>`).join("")}</ul>`;
+  document.querySelectorAll(".options-list li").forEach(opt=>{
+    opt.addEventListener("click",()=>{
+      document.querySelectorAll(".options-list li").forEach(o=>o.classList.remove("selected"));
+      opt.classList.add("selected");
+      responses[i] = {answer: opt.dataset.opt};
+      updateBubbles();
+    });
+  });
+  // footer btns
+  prevBtn.style.display = i===0?"none":"inline-block";
+  nextBtn.textContent = i===questions.length-1?"Submit":"Save & Next";
+  updateBubbles();
+}
+loadQuestion(current);
+
+// Prev / Next
+prevBtn.onclick=()=>{ if(current>0){current--; loadQuestion(current);} };
+nextBtn.onclick=()=>{
+  if(current===questions.length-1){ submitTest(); }
+  else { current++; loadQuestion(current); }
+};
+
+// Timer
+let sec=0; setInterval(()=>{sec++; let m=Math.floor(sec/60); let s=sec%60; document.getElementById("timer").textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;},1000);
+
+// Menu
+menuBtn.onclick=()=>{ modal.style.display="block"; };
+function closeMenu(){ modal.style.display="none"; }
+document.getElementById("submit-btn-menu").onclick=()=>submitTest();
+
+// Bubbles
+function updateBubbles(){
+  bubbles.innerHTML="";
+  for(let i=0;i<questions.length;i++){
+    let b=document.createElement("button");
+    b.textContent=i+1;
+    if(i===current) b.classList.add("current");
+    else if(responses[i]) b.classList.add("answered");
+    else b.classList.add("not-attempted");
+    b.onclick=()=>{ current=i; loadQuestion(i); closeMenu(); };
+    bubbles.appendChild(b);
+  }
+}
+
+// Submit
+function submitTest(){
+  if(!confirm("Submit test?")) return;
+  showSolutions(); showAnalysis();
+
+  // Add tabs
+  const tabs=document.getElementById("tabs");
+  if(!document.querySelector('[data-tab="solutions"]')){
+    tabs.innerHTML+=`<button class="tab-btn" data-tab="solutions">Solutions</button>
+                     <button class="tab-btn" data-tab="analysis">Analysis</button>`;
+  }
+  document.querySelectorAll(".tab-btn").forEach(btn=>{
+    btn.onclick=()=>switchTab(btn.dataset.tab);
+  });
+  switchTab("analysis"); closeMenu();
+}
+
+// Solutions
+function showSolutions(){
+  let html="";
+  questions.forEach((q,i)=>{
+    let user=responses[i]?responses[i].answer:"No Answer";
+    let correct=q.ans;
+    html+=`<div><h3>Q${i+1}. ${q.q}</h3>
+           <p>Your Answer: ${user}</p>
+           <p>Correct Answer: ${correct}</p></div><hr>`;
+  });
+  document.getElementById("solutions").innerHTML=html;
+}
+// Analysis
+function showAnalysis(){
+  let correct=0,attempted=0;
+  responses.forEach((r,i)=>{ if(r){attempted++; if(r.answer===questions[i].ans) correct++; } });
+  let wrong=attempted-correct; let unattempted=questions.length-attempted;
+  document.getElementById("analysis").innerHTML=`<h2>Analysis</h2>
+  <p>Total: ${questions.length}</p>
+  <p>Attempted: ${attempted}</p>
+  <p>Correct: ${correct}</p>
+  <p>Wrong: ${wrong}</p>
+  <p>Unattempted: ${unattempted}</p>`;
+}
+// Switch Tab
+function switchTab(tab){
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add("active");
+  document.getElementById(tab).classList.add("active");
+}
+</script>
+</body>
+</html>
