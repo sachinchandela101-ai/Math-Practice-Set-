@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock Test with Solutions and Tooltip</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fa; }
+.container { max-width: 700px; margin: auto; padding: 20px; }
+.card { background: #fff; padding: 20px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+button { padding: 10px 15px; margin: 5px; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; }
+button:hover { transform: scale(1.05); }
+.btn { background: linear-gradient(90deg,#007bff,#00aaff); color:white; }
+.btn-grey { background: linear-gradient(90deg,#666,#999); color:white; }
+.hidden { display: none; }
+.timer { font-size: 18px; font-weight: bold; color: #fff; background: linear-gradient(90deg,#ff4b2b,#ff416c); padding:5px 10px; border-radius:8px; display:inline-block; margin-bottom:15px; }
+.tabs { display: flex; justify-content: space-around; margin: 15px 0; }
+.tab { flex: 1; text-align: center; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s ease; }
+.tab.correct { background: linear-gradient(90deg,#b9fbc0,#22c55e); }
+.tab.incorrect { background: linear-gradient(90deg,#ffb3b3,#ff4d4d); }
+.tab.unattempted { background: linear-gradient(90deg,#cce5ff,#3399ff); }
+.tab.active { border: 2px solid #333; }
+.question-card { margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; padding: 15px; background: #fff; }
+.question-card.correct { border-color: green; }
+.question-card.incorrect { border-color: red; }
+.question-card.unattempted { border-color: #00bfff; }
+.mock-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-weight:bold; font-size:20px; }
+.question-num { position: relative; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; font-weight:bold; transition: all 0.2s ease; }
+.question-num.unattempted { background:red; color:white; }
+.question-num.marked { background:#007bff; color:white; }
+.question-num:hover { transform: scale(1.2); border: 2px solid #333; }
+.question-num .tooltip { visibility: hidden; background-color: #333; color: #fff; text-align: left; padding: 5px 8px; border-radius: 5px; position: absolute; top: -40px; left: 50%; transform: translateX(-50%); z-index: 10; white-space: nowrap; font-size: 12px; }
+.question-num:hover .tooltip { visibility: visible; }
+#menu-overlay { position: fixed; top:0; left:0; width:100%; height:100%; display:flex; justify-content:flex-end; align-items:stretch; opacity:0; pointer-events:none; z-index:1000; transition: opacity 0.3s ease; }
+#menu-overlay.active { opacity:1; pointer-events:auto; background: rgba(0,0,0,0.3); }
+#menu-popup { background:#fff; width:250px; height:100%; padding:20px; box-shadow:-3px 0 10px rgba(0,0,0,0.2); display:flex; flex-direction:column; justify-content:flex-start; transform: translateX(100%); transition: transform 0.3s ease; }
+#menu-overlay.active #menu-popup { transform: translateX(0); }
+#question-numbers { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; overflow-y:auto; flex-grow:1; }
+#popup-submit, #popup-back { margin-top:5px; }
+#test-section.blur { filter: blur(5px); transition: filter 0.3s ease; }
+@media (max-width:500px){ #menu-popup { width:80%; } .question-num { width:30px; height:30px; font-size:14px; } button { font-size:14px; padding:8px 10px; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="mock-header card">
+    <div>Mock Test</div>
+    <div id="menu-toggle">&#8942;</div>
+  </div>
+  <div id="menu-overlay">
+    <div id="menu-popup">
+      <h3>Questions</h3>
+      <div id="question-numbers"></div>
+      <button id="popup-submit" class="btn">Close</button>
+      <button id="popup-back" class="btn-grey">Back</button>
+    </div>
+  </div>
+  <div id="test-section" class="card">
+    <div class="timer">⏳ Time Left: <span id="timer">10:00</span></div>
+    <h2 id="question-text">Loading Question...</h2>
+    <div id="options"></div>
+    <div style="margin-top: 10px;">
+      <button id="prev-btn" class="btn-grey">Previous</button>
+      <button id="next-btn" class="btn">Next</button>
+      <button id="submit-btn" class="btn hidden">Submit</button>
+    </div>
+  </div>
+  <div id="result-section" class="hidden">
+    <div class="card">
+      <h2>Analysis</h2>
+      <p><b>Score:</b> <span id="score"></span></p>
+      <p><b>Correct:</b> <span id="correct"></span></p>
+      <p><b>Incorrect:</b> <span id="incorrect"></span></p>
+      <p><b>Unattempted:</b> <span id="unattempted"></span></p>
+      <p><b>Accuracy:</b> <span id="accuracy"></span>%</p>
+      <p><b>Time Taken:</b> <span id="time-taken"></span></p>
+    </div>
+    <div class="card">
+      <canvas id="resultChart"></canvas>
+    </div>
+    <div class="card">
+      <h2>Solutions</h2>
+      <div class="tabs">
+        <div class="tab correct active" data-type="correct">Correct</div>
+        <div class="tab incorrect" data-type="incorrect">Incorrect</div>
+        <div class="tab unattempted" data-type="unattempted">Unattempted</div>
+      </div>
+      <div id="solution-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const questions=[
+  {q:"Who wrote the National Anthem of India?", options:["Rabindranath Tagore","Mahatma Gandhi","Bankim Chandra Chatterjee","Subhash Chandra Bose"], correct:0, userAnswer:null, marked:false, solution:"Rabindranath Tagore wrote 'Jana Gana Mana', the national anthem of India."},
+  {q:"Which planet is known as the Red Planet?", options:["Mars","Venus","Jupiter","Saturn"], correct:0, userAnswer:null, marked:false, solution:"Mars is called the Red Planet due to its reddish appearance caused by iron oxide."},
+  {q:"Largest planet in Solar System?", options:["Earth","Mars","Jupiter","Venus"], correct:2, userAnswer:null, marked:false, solution:"Jupiter is the largest planet in the Solar System."}
+];
+let currentQ=0,totalTime=10*60,timeLeft=totalTime,timerInterval;
+const qText=document.getElementById("question-text");
+const optionsDiv=document.getElementById("options");
+const prevBtn=document.getElementById("prev-btn");
+const nextBtn=document.getElementById("next-btn");
+const submitBtn=document.getElementById("submit-btn");
+const timerDisplay=document.getElementById("timer");
+const menuToggle=document.getElementById("menu-toggle");
+const menuOverlay=document.getElementById("menu-overlay");
+const questionNumbersDiv=document.getElementById("question-numbers");
+const popupSubmit=document.getElementById("popup-submit");
+const popupBack=document.getElementById("popup-back");
+
+function loadQuestion(){
+  let q=questions[currentQ];
+  qText.innerText=`Q${currentQ+1}. ${q.q}`;
+  optionsDiv.innerHTML="";
+  q.options.forEach((opt,i)=>{
+    let btn=document.createElement("button");
+    btn.innerText=opt;
+    btn.className="btn";
+    btn.style.display="block";
+    btn.style.marginBottom="8px";
+    if(q.userAnswer===i) btn.style.background="green";
+    btn.onclick=()=>{
+      q.userAnswer=i;
+      q.marked=true;
+      loadQuestion();
+    };
+    optionsDiv.appendChild(btn);
+  });
+  prevBtn.style.display=currentQ===0?"none":"inline-block";
+  nextBtn.style.display=currentQ===questions.length-1?"none":"inline-block";
+  submitBtn.classList.toggle("hidden",currentQ!==questions.length-1);
+  renderQuestionNumbers();
+}
+
+function startTimer(){
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    let minutes=Math.floor(timeLeft/60);
+    let seconds=timeLeft%60;
+    timerDisplay.innerText=`${minutes}:${seconds<10?"0":""}${seconds}`;
+    if(timeLeft<=0){ clearInterval(timerInterval); showResult(); }
+  },1000);
+}
+
+function showResult(){
+  clearInterval(timerInterval);
+  document.getElementById("test-section").classList.add("hidden");
+  document.getElementById("result-section").classList.remove("hidden");
+  let correct=0,incorrect=0,unattempted=0;
+  questions.forEach(q=>{
+    if(q.userAnswer===null) unattempted++;
+    else if(q.userAnswer===q.correct) correct++;
+    else incorrect++;
+  });
+  let score=correct*2.5;
+  let accuracy=(correct/(correct+incorrect))*100||0;
+  let timeTaken=totalTime-timeLeft;
+  let minutes=Math.floor(timeTaken/60);
+  let seconds=timeTaken%60;
+  document.getElementById("score").innerText=score;
+  document.getElementById("correct").innerText=correct;
+  document.getElementById("incorrect").innerText=incorrect;
+  document.getElementById("unattempted").innerText=unattempted;
+  document.getElementById("accuracy").innerText=accuracy.toFixed(1);
+  document.getElementById("time-taken").innerText=`${minutes}m ${seconds}s`;
+  new Chart(document.getElementById("resultChart"),{type:"doughnut",data:{labels:["Correct","Incorrect","Unattempted"],datasets:[{data:[correct,incorrect,unattempted],backgroundColor:["green","red","#00bfff"]}]}});
+
+  const solutionList=document.getElementById("solution-list");
+  solutionList.innerHTML="";
+  questions.forEach((q,i)=>{
+    let div=document.createElement("div");
+    div.className="question-card";
+    if(q.userAnswer===null) div.classList.add("unattempted");
+    else if(q.userAnswer===q.correct) div.classList.add("correct");
+    else div.classList.add("incorrect");
+    div.innerHTML=`<b>Q${i+1}. ${q.q}</b>`;
+    q.options.forEach((opt,j)=>{
+      let mark="";
+      if(j===q.correct) mark=" ✅";
+      if(j===q.userAnswer && j!==q.correct) mark=" ❌";
+      div.innerHTML+=`<p>${j+1}. ${opt}${mark}</p>`;
+    });
+    div.innerHTML+=`<p style="background:#f0f0f0;padding:5px;border-radius:5px;"><b>Solution:</b> ${q.solution}</p>`;
+    solutionList.appendChild(div);
+  });
+  const tabs=document.querySelectorAll(".tab");
+  const questionsDivs=document.querySelectorAll(".question-card");
+  tabs.forEach(tab=>{
+    tab.addEventListener("click",()=>{
+      tabs.forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      let type=tab.dataset.type;
+      questionsDivs.forEach(q=>{ q.style.display=q.classList.contains(type)?"block":"none"; });
+    });
+  });
+  questionsDivs.forEach(q=>{ if(!q.classList.contains("correct")) q.style.display="none"; });
+}
+
+function renderQuestionNumbers(){
+  questionNumbersDiv.innerHTML="";
+  questions.forEach((q,i)=>{
+    let span=document.createElement("div");
+    span.className="question-num";
+    if(q.userAnswer===null) span.classList.add("unattempted");
+    else if(q.marked) span.classList.add("marked");
+    span.innerText=i+1;
+    let tooltip=document.createElement("span");
+    tooltip.className="tooltip";
+    tooltip.innerText=q.solution;
+    span.appendChild(tooltip);
+    span.onclick=()=>{
+      currentQ=i;
+      loadQuestion();
+      menuOverlay.classList.remove("active");
+      document.getElementById("test-section").classList.remove("blur");
+    };
+    questionNumbersDiv.appendChild(span);
+  });
+}
+
+menuToggle.onclick=()=>{
+  menuOverlay.classList.add("active");
+  document.getElementById("test-section").classList.add("blur");
+  renderQuestionNumbers();
+};
+popupBack.onclick=()=>{
+  menuOverlay.classList.remove("active");
+  document.getElementById("test-section").classList.remove("blur");
+};
+popupSubmit.onclick=()=>{
+  menuOverlay.classList.remove("active");
+  document.getElementById("test-section").classList.remove("blur");
+};
+prevBtn.onclick=()=>{ currentQ--; loadQuestion(); };
+nextBtn.onclick=()=>{ currentQ++; loadQuestion(); };
+submitBtn.onclick=showResult;
+loadQuestion();
+startTimer();
+</script>
+</body>
+</html>
