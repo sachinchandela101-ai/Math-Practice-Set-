@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-  <title>मॉक टेस्ट - पाइप और टंकी (स्तर 5)</title>
+  <title>मॉक टेस्ट - पाइप और टंकी (स्तर 3)</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin:0; background:#f5f7fa; }
@@ -78,7 +78,7 @@
 <body>
 <div class="container">
   <div class="mock-header card">
-    <div id="mock-title">पाइप और टंकी मॉक टेस्ट (स्तर 5)</div>
+    <div id="mock-title">पाइप और टंकी मॉक टेस्ट (स्तर 3)</div>
     <div style="display:flex;align-items:center;">
       <button id="lang-toggle" class="btn-grey">English</button>
       <div id="menu-toggle" style="margin-left: 10px; cursor:pointer;">&#8942;</div>
@@ -95,7 +95,7 @@
     </div>
   </div>
 <div id="test-section" class="card">
-    <div class="timer" id="timer">समय: 25:00</div>
+    <div class="timer" id="timer">समय: 27:00</div>
     <div id="question-container"></div>
     <div id="navigation-buttons" style="display: flex; justify-content: space-between;">
         <button id="prev-btn" class="btn-grey">पिछला प्रश्न</button>
@@ -261,7 +261,7 @@ let score = 0;
 let lang = "hi";
 let answers = new Array(questions.length).fill(null);
 let timer;
-let timeLeft = 25 * 60; // 25 minutes in seconds
+let timeLeft = 27 * 60; // 27 minutes in seconds
 
 // Elements
 const questionContainer = document.getElementById("question-container");
