@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <title>मॉक टेस्ट - प्रतिशत (स्तर 6)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background:#f5f7fa; }
+    .container { max-width:800px; margin:auto; padding:20px; }
+    .card { background:#fff; padding:20px; margin-bottom:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+    button { padding:10px 15px; margin:5px; border:none; border-radius:6px; cursor:pointer; transition:0.2s; }
+    button:hover{transform:scale(1.02);}
+    .btn{background:linear-gradient(90deg,#007bff,#00aaff); color:white;font-weight:bold;}
+    .btn-grey{background:linear-gradient(90deg,#666,#999); color:white;}
+    .hidden{display:none;}
+    .timer{font-size:18px;font-weight:bold;color:#fff;background:linear-gradient(90deg,#ff4b2b,#ff416c);padding:5px 10px;border-radius:8px;display:inline-block;margin-bottom:15px;}
+    .tabs{display:flex;justify-content:space-around;margin:15px 0;}
+    .tab{flex:1;text-align:center;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;transition:0.2s;}
+    .tab.correct{background:linear-gradient(90deg,#b9fbc0,#22c55e);}
+    .tab.incorrect{background:linear-gradient(90deg,#ffb3b3,#ff4d4d);}
+    .tab.unattempted{background:linear-gradient(90deg,#cce5ff,#3399ff);}
+    .tab.active{border:2px solid #333;}
+    .question-card{margin-bottom:15px;border:1px solid #ddd;border-radius:10px;padding:15px;background:#fff;}
+    .question-card.correct{border-color:green;}
+    .question-card.incorrect{border-color:red;}
+    .question-card.unattempted{border-color:#00bfff;}
+    .mock-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:bold;font-size:20px;}
+    .question-num{position:relative;width:35px;height:35px;border-radius:50%;display:flex;justify-content:center;align-items:center;cursor:pointer;font-weight:bold;transition:0.2s;color:white;}
+    .question-num.unattempted{background-color: white; border: 1px solid black; color: black;}
+    .question-num.attempted{background-color: #007bff;}
+    .question-num.current{background-color: #ff4b2b;}
+    .question-num.correct{background-color: #22c55e;}
+    .question-num.incorrect{background-color: #ff4d4d;}
+    .question-num:hover{transform:scale(1.2);border:2px solid #333;}
+    .question-num .tooltip{visibility:hidden;background:#333;color:#fff;text-align:left;padding:5px 8px;border-radius:5px;position:absolute;top:-40px;left:50%;transform:translateX(-50%);z-index:10;white-space:nowrap;font-size:12px;}
+    .question-num:hover .tooltip{visibility:visible;}
+    #menu-overlay{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;z-index:1000;transition:0.3s;background:rgba(0,0,0,0.5);}
+    #menu-overlay.active{opacity:1;pointer-events:auto;}
+    #menu-popup{background:#fff;width:600px;max-width:90%;max-height:90%;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:flex;flex-direction:column;transform:scale(0.7);opacity:0;transition:0.3s ease-in-out;position:relative;}
+    #menu-overlay.active #menu-popup{transform:scale(1);opacity:1;}
+    #menu-popup h3 { margin-top:0; text-align:center; }
+    #menu-popup #close-popup{position:absolute;top:10px;right:15px;font-size:20px;cursor:pointer;color:#333;font-weight:bold;}
+    #question-numbers{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;overflow-y:auto;flex-grow:1;justify-content:center;}
+    #popup-submit,#popup-back{margin-top:10px;padding:12px;font-size:16px;}
+    #test-section.blur{filter:blur(5px);transition:0.3s;}
+    #lang-toggle{cursor:pointer;font-size:16px;padding:5px 10px;border-radius:6px;border:1px solid #ccc;background:#f0f0f0;}
+    @media(max-width:500px){#menu-popup{width:90%;}.question-num{width:30px;height:30px;font-size:14px;}button{font-size:14px;padding:8px 10px;}}
+    .option-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        color: #333;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+    .option-btn:hover { background-color: #e0e0e0; }
+    .option-btn.selected { background-color: #007bff; color: white; border-color: #007bff; }
+    .option-btn.correct { background-color: #22c55e; color: white; border-color: #22c55e; }
+    .option-btn.incorrect { background-color: #ff4d4d; color: white; border-color: #ff4d4d; }
+    .question-card pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: inherit;
+    }
+    #score-summary p {
+      margin: 5px 0;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="mock-header card">
+    <div id="mock-title">प्रतिशत मॉक टेस्ट (स्तर 6)</div>
+    <div style="display:flex;align-items:center;">
+      <button id="lang-toggle" class="btn-grey">English</button>
+      <div id="menu-toggle" style="margin-left: 10px; cursor:pointer;">&#8942;</div>
+    </div>
+  </div>
+
+  <div id="menu-overlay">
+    <div id="menu-popup">
+      <span id="close-popup">&times;</span>
+      <h3 id="menu-title">प्रश्न</h3>
+      <div id="question-numbers"></div>
+      <button id="popup-submit" class="btn">सबमिट करें</button>
+      <button id="popup-back" class="btn-grey">वापस जाएँ</button>
+    </div>
+  </div>
+<div id="test-section" class="card">
+    <div class="timer" id="timer">समय: 25:00</div>
+    <div id="question-container"></div>
+    <div id="navigation-buttons" style="display: flex; justify-content: space-between;">
+        <button id="prev-btn" class="btn-grey">पिछला प्रश्न</button>
+        <button id="next-btn" class="btn">अगला प्रश्न</button>
+    </div>
+  </div>
+
+  <div id="result-section" class="card hidden">
+    <h2>आपका परिणाम</h2>
+    <div id="score-summary"></div>
+    <div class="tabs">
+      <div class="tab correct" id="tab-correct">सही</div>
+      <div class="tab incorrect" id="tab-incorrect">गलत</div>
+      <div class="tab unattempted" id="tab-unattempted">छोड़े गए</div>
+    </div>
+    <div id="analysis"></div>
+    <canvas id="resultChart" width="300" height="300"></canvas>
+  </div>
+</div>
+<script>
+let questions = [
+  {
+    q_hi: "यदि किसी संख्या का 30% 180 है, तो उस संख्या का 25% कितना होगा?",
+    q_en: "If 30% of a number is 180, what will be 25% of that number?",
+    options: ["120", "150", "160", "180"],
+    answer: 1,
+    solution_hi: "मान लें वह संख्या 'x' है।\n30% of x = 180\n(30/100) * x = 180\nx = (180 * 100) / 30 = 600\nअब, 600 का 25% = (25/100) * 600 = 150।",
+    solution_en: "Let the number be 'x'.\n30% of x = 180\n(30/100) * x = 180\nx = (180 * 100) / 30 = 600\nNow, 25% of 600 = (25/100) * 600 = 150."
+  },
+  {
+    q_hi: "एक शहर की जनसंख्या में प्रति वर्ष 10% की वृद्धि होती है। यदि वर्तमान जनसंख्या 20,000 है, तो 2 वर्ष बाद इसकी जनसंख्या क्या होगी?",
+    q_en: "The population of a town increases by 10% annually. If the current population is 20,000, what will be its population after 2 years?",
+    options: ["22000", "23100", "24200", "25000"],
+    answer: 2,
+    solution_hi: "2 वर्ष बाद जनसंख्या = 20000 * (1 + 10/100) * (1 + 10/100)\n= 20000 * (1.10) * (1.10)\n= 20000 * 1.21 = 24200।",
+    solution_en: "Population after 2 years = 20000 * (1 + 10/100) * (1 + 10/100)\n= 20000 * (1.10) * (1.10)\n= 20000 * 1.21 = 24200."
+  },
+  {
+    q_hi: "यदि A की आय B की आय से 20% अधिक है, तो B की आय A की आय से कितने प्रतिशत कम है?",
+    q_en: "If A's income is 20% more than B's income, by what percentage is B's income less than A's?",
+    options: ["16.67%", "20%", "25%", "33.33%"],
+    answer: 0,
+    solution_hi: "माना B की आय ₹100 है।\nतो A की आय = 100 + 20% of 100 = ₹120।\nB की आय A से कम है = 120 - 100 = ₹20।\nप्रतिशत कमी = (कमी / A की आय) * 100\n= (20 / 120) * 100 = (1/6) * 100 = 16.67%।",
+    solution_en: "Let B's income be ₹100.\nThen A's income = 100 + 20% of 100 = ₹120.\nB's income is less than A's by = 120 - 100 = ₹20.\nPercentage decrease = (Decrease / A's income) * 100\n= (20 / 120) * 100 = (1/6) * 100 = 16.67%."
+  },
+  {
+    q_hi: "एक छात्र को परीक्षा पास करने के लिए 40% अंक चाहिए। उसे 180 अंक मिले और वह 20 अंकों से फेल हो गया। अधिकतम अंक क्या हैं?",
+    q_en: "A student needs 40% marks to pass an exam. He gets 180 marks and fails by 20 marks. What are the maximum marks?",
+    options: ["400", "450", "500", "550"],
+    answer: 2,
+    solution_hi: "उत्तीर्ण अंक = 180 (प्राप्त अंक) + 20 (जितने से फेल हुआ) = 200 अंक।\nये 200 अंक अधिकतम अंकों के 40% के बराबर हैं।\nमान लें अधिकतम अंक 'M' हैं।\n40% of M = 200\n(40/100) * M = 200\nM = (200 * 100) / 40 = 500।",
+    solution_en: "Passing marks = 180 (marks obtained) + 20 (failed by) = 200 marks.\nThese 200 marks are equal to 40% of the maximum marks.\nLet the maximum marks be 'M'.\n40% of M = 200\n(40/100) * M = 200\nM = (200 * 100) / 40 = 500."
+  },
+  {
+    q_hi: "एक चुनाव में, उम्मीदवार A को 60% वोट मिले और वह 1200 वोटों से जीत गया। डाले गए कुल वोटों की संख्या क्या है?",
+    q_en: "In an election, Candidate A gets 60% of the votes and wins by 1200 votes. What is the total number of votes cast?",
+    options: ["4000", "5000", "6000", "7200"],
+    answer: 2,
+    solution_hi: "विजेता उम्मीदवार का वोट प्रतिशत = 60%।\nहारे हुए उम्मीदवार का वोट प्रतिशत = 100% - 60% = 40%।\nजीत का प्रतिशत = 60% - 40% = 20%।\nप्रश्न के अनुसार, 20% = 1200 वोट।\nतो, 100% (कुल वोट) = (1200 / 20) * 100 = 60 * 100 = 6000।",
+    solution_en: "Winning candidate's vote percentage = 60%.\nLosing candidate's vote percentage = 100% - 60% = 40%.\nWinning margin percentage = 60% - 40% = 20%.\nAs per the question, 20% = 1200 votes.\nSo, 100% (Total votes) = (1200 / 20) * 100 = 60 * 100 = 6000."
+  },
+  {
+    q_hi: "एक आयत की लंबाई में 20% की वृद्धि की जाती है और उसकी चौड़ाई में 10% की कमी की जाती है। उसके क्षेत्रफल में कितने प्रतिशत का परिवर्तन होगा?",
+    q_en: "The length of a rectangle is increased by 20% and its width is decreased by 10%. What is the percentage change in its area?",
+    options: ["8% वृद्धि", "8% कमी", "10% वृद्धि", "10% कमी"],
+    answer: 0,
+    solution_hi: "प्रभावी प्रतिशत परिवर्तन का सूत्र: A + B + (A*B)/100\nजहाँ A = +20% (लंबाई में वृद्धि) और B = -10% (चौड़ाई में कमी)।\nपरिवर्तन = 20 + (-10) + (20 * -10) / 100\n= 20 - 10 + (-200)/100\n= 10 - 2 = 8%।\nक्योंकि परिणाम सकारात्मक है, यह वृद्धि है।",
+    solution_en: "Effective percentage change formula: A + B + (A*B)/100\nWhere A = +20% (increase in length) and B = -10% (decrease in width).\nChange = 20 + (-10) + (20 * -10) / 100\n= 20 - 10 + (-200)/100\n= 10 - 2 = 8%.\nSince the result is positive, it's an increase."
+  },
+  {
+    q_hi: "एक व्यक्ति अपनी आय का 30% भोजन पर, 20% किराए पर और 10% कपड़ों पर खर्च करता है। यदि उसकी बचत ₹3,000 है, तो उसकी कुल आय क्या है?",
+    q_en: "A man spends 30% of his income on food, 20% on rent, and 10% on clothes. If his savings are ₹3,000, what is his total income?",
+    options: ["₹6,000", "₹7,500", "₹10,000", "₹12,000"],
+    answer: 1,
+    solution_hi: "कुल खर्च किया गया प्रतिशत = 30% + 20% + 10% = 60%।\nबचत का प्रतिशत = 100% (कुल आय) - 60% (कुल खर्च) = 40%।\nप्रश्न के अनुसार, 40% = ₹3,000।\nतो, 100% (कुल आय) = (3000 / 40) * 100 = 75 * 100 = ₹7,500।",
+    solution_en: "Total percentage spent = 30% + 20% + 10% = 60%.\nPercentage of savings = 100% (total income) - 60% (total spent) = 40%.\nAs per the question, 40% = ₹3,000.\nSo, 100% (total income) = (3000 / 40) * 100 = 75 * 100 = ₹7,500."
+  },
+  {
+    q_hi: "दो संख्याएँ एक तीसरी संख्या से क्रमशः 20% और 50% हैं। पहली संख्या दूसरी संख्या का कितने प्रतिशत है?",
+    q_en: "Two numbers are respectively 20% and 50% of a third number. What percentage is the first number of the second?",
+    options: ["30%", "40%", "50%", "60%"],
+    answer: 1,
+    solution_hi: "माना तीसरी संख्या 'C' 100 है।\nतो पहली संख्या 'A' = 20% of 100 = 20।\nऔर दूसरी संख्या 'B' = 50% of 100 = 50।\nपहली संख्या (20), दूसरी संख्या (50) का कितने प्रतिशत है?\n= (20 / 50) * 100 = (2/5) * 100 = 40%।",
+    solution_en: "Let the third number 'C' be 100.\nThen the first number 'A' = 20% of 100 = 20.\nAnd the second number 'B' = 50% of 100 = 50.\nWhat percentage is the first number (20) of the second number (50)?\n= (20 / 50) * 100 = (2/5) * 100 = 40%."
+  },
+  {
+    q_hi: "चीनी की कीमत में 25% की वृद्धि होती है। एक परिवार को अपनी खपत में कितने प्रतिशत की कमी करनी चाहिए ताकि व्यय समान रहे?",
+    q_en: "The price of sugar increases by 25%. By what percentage should a family reduce its consumption so that the expenditure remains the same?",
+    options: ["15%", "20%", "25%", "30%"],
+    answer: 1,
+    solution_hi: "खपत में प्रतिशत कमी = [प्रतिशत वृद्धि / (100 + प्रतिशत वृद्धि)] * 100\n= [25 / (100 + 25)] * 100\n= (25 / 125) * 100 = (1/5) * 100 = 20%।",
+    solution_en: "Percentage reduction in consumption = [Percentage increase / (100 + Percentage increase)] * 100\n= [25 / (100 + 25)] * 100\n= (25 / 125) * 100 = (1/5) * 100 = 20%."
+  },
+  {
+    q_hi: "एक छात्र को 30% अंक मिले और वह 60 अंकों से फेल हो गया। दूसरे छात्र को 45% अंक मिले और वह 15 अंकों से पास हो गया। उत्तीर्ण प्रतिशत क्या है?",
+    q_en: "A student gets 30% marks and fails by 60. Another gets 45% and passes by 15. What is the passing percentage?",
+    options: ["35%", "38%", "40%", "42%"],
+    answer: 3,
+    solution_hi: "अधिकतम अंकों को 'M' मान लें।\nउत्तीर्ण अंक = 30% of M + 60\nउत्तीर्ण अंक = 45% of M - 15\nदोनों समीकरणों को बराबर करने पर:\n30% of M + 60 = 45% of M - 15\n60 + 15 = 45% of M - 30% of M\n75 = 15% of M\n15/100 * M = 75 -> M = (75*100)/15 = 500।\nउत्तीर्ण अंक = 30% of 500 + 60 = 150 + 60 = 210।\nउत्तीर्ण प्रतिशत = (210 / 500) * 100 = 42%।",
+    solution_en: "Let max marks be 'M'. Passing marks = 30% of M + 60 = 45% of M - 15. 15% of M = 75. M = 500. Passing marks = 30% of 500 + 60 = 210. Passing percentage = (210/500)*100 = 42%."
+  },
+  {
+    q_hi: "दूध और पानी के 20 लीटर के मिश्रण में 10% पानी है। इसमें कितना और पानी मिलाया जाना चाहिए ताकि यह 20% पानी बन जाए?",
+    q_en: "A 20-liter mixture of milk and water contains 10% water. How much more water should be added to make it 20% water?",
+    options: ["2 लीटर", "2.5 लीटर", "3 लीटर", "4 लीटर"],
+    answer: 1,
+    solution_hi: "20 लीटर के मिश्रण में पानी = 10% of 20 = 2 लीटर।\nदूध = 20 - 2 = 18 लीटर।\nमान लें 'x' लीटर पानी मिलाया जाता है।\nनया मिश्रण = 20 + x लीटर।\nनया पानी = 2 + x लीटर।\nनया पानी नए मिश्रण का 20% है।\n(2 + x) / (20 + x) = 20/100 = 1/5\n5(2 + x) = 20 + x\n10 + 5x = 20 + x\n4x = 10 -> x = 2.5 लीटर।",
+    solution_en: "In 20L mixture, water = 10% of 20 = 2L. Milk = 18L. Let 'x' L of water be added. New water = 2+x. New mixture = 20+x. (2+x)/(20+x) = 20/100 = 1/5. 10+5x=20+x. 4x=10. x=2.5 liters."
+  },
+  {
+    q_hi: "एक व्यक्ति अपनी आय का 75% खर्च करता है। यदि उसकी आय में 20% की वृद्धि होती है और व्यय में 10% की वृद्धि होती है, तो उसकी बचत में कितने प्रतिशत की वृद्धि होगी?",
+    q_en: "A man spends 75% of his income. If his income increases by 20% and his expenditure increases by 10%, what is the percentage increase in his savings?",
+    options: ["30%", "40%", "50%", "60%"],
+    answer: 2,
+    solution_hi: "माना आय ₹100 है। व्यय = ₹75, बचत = ₹25।\nनई आय = 100 + 20% of 100 = ₹120।\nनया व्यय = 75 + 10% of 75 = 75 + 7.5 = ₹82.5।\nनई बचत = 120 - 82.5 = ₹37.5।\nबचत में वृद्धि = 37.5 - 25 = ₹12.5।\nप्रतिशत वृद्धि = (12.5 / 25) * 100 = 0.5 * 100 = 50%।",
+    solution_en: "Let income be ₹100. Exp. = ₹75, Savings = ₹25. New income = 120. New exp. = 75 + 10% of 75 = 82.5. New savings = 120-82.5=37.5. Increase in savings = 37.5-25=12.5. % increase = (12.5/25)*100 = 50%."
+  },
+  {
+    q_hi: "400 का 30% का 20% क्या है?",
+    q_en: "What is 20% of 30% of 400?",
+    options: ["20", "24", "28", "32"],
+    answer: 1,
+    solution_hi: "400 * (30/100) * (20/100)\n= 400 * 0.30 * 0.20\n= 120 * 0.20 = 24।",
+    solution_en: "400 * (30/100) * (20/100)\n= 400 * 0.30 * 0.20\n= 120 * 0.20 = 24."
+  },
+  {
+    q_hi: "एक वस्तु की कीमत पहले 10% बढ़ती है, फिर 20% घटती है, और फिर 30% बढ़ती है। कुल प्रतिशत परिवर्तन क्या है?",
+    q_en: "The price of an item first increases by 10%, then decreases by 20%, and then increases by 30%. What is the overall percentage change?",
+    options: ["14.4% वृद्धि", "12.4% वृद्धि", "15.4% वृद्धि", "18.4% वृद्धि"],
+    answer: 0,
+    solution_hi: "मान लें मूल कीमत ₹100 है।\n10% की वृद्धि के बाद = 100 * 1.10 = 110।\n20% की कमी के बाद = 110 * 0.80 = 88।\n30% की वृद्धि के बाद = 88 * 1.30 = 114.4।\nकुल परिवर्तन = 114.4 - 100 = 14.4।\nप्रतिशत परिवर्तन = 14.4% की वृद्धि।",
+    solution_en: "Let original price be ₹100. After 10% increase = 100*1.1 = 110. After 20% decrease = 110*0.8=88. After 30% increase = 88*1.3=114.4. Overall change = 114.4-100=14.4. Percentage change = 14.4% increase."
+  },
+  {
+    q_hi: "एक शहर की जनसंख्या पहले वर्ष 20% बढ़ती है और दूसरे वर्ष 10% घटती है। यदि वर्तमान जनसंख्या 32,400 है, तो 2 वर्ष पहले जनसंख्या क्या थी?",
+    q_en: "The population of a town increases by 20% in the first year and decreases by 10% in the second year. If the current population is 32,400, what was it 2 years ago?",
+    options: ["30000", "32000", "34000", "36000"],
+    answer: 0,
+    solution_hi: "माना 2 वर्ष पहले जनसंख्या 'P' थी।\nP * (1 + 20/100) * (1 - 10/100) = 32400\nP * 1.20 * 0.90 = 32400\nP * 1.08 = 32400\nP = 32400 / 1.08 = 30000।",
+    solution_en: "Let the population 2 years ago be 'P'.\nP * (1+20/100) * (1-10/100) = 32400. P*1.2*0.9=32400. P*1.08=32400. P=32400/1.08 = 30000."
+  },
+  {
+    q_hi: "एक चुनाव में, 10% मतदाताओं ने वोट नहीं डाले। डाले गए वोटों में से 10% अमान्य घोषित किए गए। जीतने वाले उम्मीदवार को मान्य वोटों का 60% मिला और वह 2430 वोटों से जीत गया। कुल मतदाताओं की संख्या क्या है?",
+    q_en: "In an election, 10% of voters didn't vote. 10% of the cast votes were invalid. The winning candidate got 60% of the valid votes and won by 2430 votes. What is the total number of voters?",
+    options: ["15000", "18000", "20000", "25000"],
+    answer: 0,
+    solution_hi: "माना कुल मतदाताओं की संख्या 100x है।\nवोट डालने वाले = 90% of 100x = 90x।\nअमान्य वोट = 10% of 90x = 9x।\nमान्य वोट = 90x - 9x = 81x।\nविजेता को मिले वोट = 60% of 81x = 48.6x।\nहारने वाले को मिले वोट = 40% of 81x = 32.4x।\nजीत का अंतर = 48.6x - 32.4x = 16.2x।\n16.2x = 2430 -> x = 150।\nकुल मतदाता = 100x = 100 * 150 = 15000।",
+    solution_en: "Let total voters be 100x. Voted = 90% of 100x = 90x. Invalid votes = 10% of 90x = 9x. Valid votes = 81x. Winner's votes = 60% of 81x = 48.6x. Loser's votes = 40% of 81x = 32.4x. Margin = 16.2x. 16.2x=2430 -> x=150. Total voters = 100x=15000."
+  },
+  {
+    q_hi: "A का वेतन B के वेतन का 50% है। B का वेतन C के वेतन का 60% है। यदि A का वेतन ₹1,200 है, तो C का वेतन क्या है?",
+    q_en: "A's salary is 50% of B's. B's salary is 60% of C's. If A's salary is ₹1,200, what is C's salary?",
+    options: ["₹3,000", "₹4,000", "₹5,000", "₹6,000"],
+    answer: 1,
+    solution_hi: "A का वेतन = 50% of B का वेतन\n1200 = (50/100) * B -> B = 1200 * 2 = ₹2400।\nB का वेतन = 60% of C का वेतन\n2400 = (60/100) * C -> C = (2400 * 100) / 60 = 40 * 100 = ₹4000।",
+    solution_en: "A's salary = 50% of B's. 1200 = 0.5 * B -> B = 2400. B's salary = 60% of C's. 2400 = 0.6 * C -> C = 2400/0.6 = 4000."
+  },
+  {
+    q_hi: "एक विक्रेता को ₹10,000 तक की बिक्री पर 10% कमीशन और ₹10,000 से अधिक की बिक्री पर 15% कमीशन मिलता है। यदि उसकी कुल कमीशन ₹2,500 है, तो उसकी कुल बिक्री क्या है?",
+    q_en: "A salesman gets 10% commission on all sales up to ₹10,000 and 15% on sales exceeding ₹10,000. If his total commission is ₹2,500, what are his total sales?",
+    options: ["₹20,000", "₹25,000", "₹30,000", "₹35,000"],
+    answer: 0,
+    solution_hi: "₹10,000 तक की बिक्री पर कमीशन = 10% of 10000 = ₹1000।\nशेष कमीशन = 2500 - 1000 = ₹1500।\nयह शेष ₹1500 कमीशन ₹10,000 से ऊपर की बिक्री पर 15% की दर से है।\n15% of (बिक्री) = 1500\n(15/100) * बिक्री = 1500 -> बिक्री = (1500 * 100) / 15 = ₹10,000।\nकुल बिक्री = 10000 (पहली बिक्री) + 10000 (दूसरी बिक्री) = ₹20,000।",
+    solution_en: "Commission on first ₹10,000 sales = 10% of 10000 = ₹1000. Remaining commission = 2500-1000=₹1500. This is 15% of sales above ₹10,000. 15% of sales = 1500 -> Sales = 10000. Total sales = 10000+10000=₹20,000."
+  },
+  {
+    q_hi: "एक परीक्षा में, 80% छात्र विज्ञान में और 70% अंग्रेजी में पास हुए। 10% दोनों विषयों में फेल हुए। यदि 144 छात्र दोनों विषयों में पास हुए, तो कुल छात्रों की संख्या ज्ञात करें।",
+    q_en: "In an exam, 80% of students passed in Science and 70% passed in English. 10% failed in both. If 144 students passed in both subjects, find the total number of students.",
+    options: ["180", "200", "220", "240"],
+    answer: 3,
+    solution_hi: "दोनों में फेल = 10%। तो दोनों में से कम से कम एक में पास = 100% - 10% = 90%।\nविज्ञान में पास = 80%, अंग्रेजी में पास = 70%।\nकम से कम एक में पास (सूत्र से) = (विज्ञान पास) + (अंग्रेजी पास) - (दोनों में पास)\n90% = 80% + 70% - (दोनों में पास)%\n(दोनों में पास)% = 150% - 90% = 60%।\nप्रश्न के अनुसार, 60% = 144 छात्र।\nकुल छात्र = (144 / 60) * 100 = 2.4 * 100 = 240।",
+    solution_en: "Failed in both = 10%. So, passed in at least one = 90%. Passed in Science = 80%, English = 70%. Passed in at least one (formula) = (Sci Pass) + (Eng Pass) - (Both Pass). 90% = 80%+70% - (Both Pass)%. Both Pass% = 150%-90%=60%. As per Q, 60%=144 students. Total students = (144/60)*100=240."
+  },
+  {
+    q_hi: "एक वस्तु की कीमत 20% बढ़ जाती है। एक परिवार अपनी खपत में कितने प्रतिशत की कमी करे कि व्यय में केवल 10% की वृद्धि हो?",
+    q_en: "The price of an item increases by 20%. By what percentage should a family reduce its consumption so that the expenditure increases by only 10%?",
+    options: ["5% कमी", "8.33% कमी", "10% कमी", "12% कमी"],
+    answer: 1,
+    solution_hi: "माना मूल कीमत ₹100 और खपत 100 इकाई है।\nमूल व्यय = 100 * 100 = ₹10,000।\nनई कीमत = 100 + 20% = ₹120।\nनया व्यय = 10,000 + 10% = ₹11,000।\nनई खपत = नया व्यय / नई कीमत = 11000 / 120 = 91.67 इकाई।\nखपत में कमी = 100 - 91.67 = 8.33 इकाई।\nप्रतिशत कमी = (8.33 / 100) * 100 = 8.33%।",
+    solution_en: "Let original price be ₹100 and consumption 100 units. Original expenditure = 100*100=10000. New price=120. New expenditure=11000. New consumption = 11000/120 = 91.67 units. Decrease in consumption = 100-91.67 = 8.33 units. % decrease = 8.33%."
+  }
+];
+
+// The rest of the script is the same as before.
+let currentQuestion = 0;
+let score = 0;
+let lang = "hi";
+let answers = new Array(questions.length).fill(null);
+let timer;
+let timeLeft = 25 * 60; // 25 minutes in seconds
+
+// Elements
+const questionContainer = document.getElementById("question-container");
+const prevBtn = document.getElementById("prev-btn");
+const nextBtn = document.getElementById("next-btn");
+const timerEl = document.getElementById("timer");
+const resultSection = document.getElementById("result-section");
+const scoreSummaryDiv = document.getElementById("score-summary");
+const analysisDiv = document.getElementById("analysis");
+const ctx = document.getElementById("resultChart").getContext("2d");
+const navigationButtons = document.getElementById("navigation-buttons");
+
+// Popup elements
+const menuToggle = document.getElementById("menu-toggle");
+const menuOverlay = document.getElementById("menu-overlay");
+const closePopup = document.getElementById("close-popup");
+const testSection = document.getElementById("test-section");
+const qNumContainer = document.getElementById("question-numbers");
+const popupSubmit = document.getElementById("popup-submit");
+const popupBack = document.getElementById("popup-back");
+
+// Tabs
+const tabCorrect = document.getElementById("tab-correct");
+const tabIncorrect = document.getElementById("tab-incorrect");
+const tabUnattempted = document.getElementById("tab-unattempted");
+let currentTab = 'correct';
+
+// Language toggle
+document.getElementById("lang-toggle").addEventListener("click", ()=>{
+  lang = lang === "hi" ? "en" : "hi";
+  document.getElementById("lang-toggle").innerText = lang === "hi" ? "English" : "हिंदी";
+  document.getElementById("mock-title").innerText = lang === "hi" ? "प्रतिशत मॉक टेस्ट (स्तर 6)" : "Percentage Mock Test (Level 6)";
+  document.getElementById("menu-title").innerText = lang === "hi" ? "प्रश्न" : "Questions";
+  popupSubmit.innerText = lang === "hi" ? "सबमिट करें" : "Submit";
+  popupBack.innerText = lang === "hi" ? "वापस जाएँ" : "Back";
+  prevBtn.innerText = lang === "hi" ? "पिछला प्रश्न" : "Previous Question";
+  nextBtn.innerText = lang === "hi" ? "अगला प्रश्न" : "Next Question";
+  if(!resultSection.classList.contains("hidden")){
+    tabCorrect.innerText = lang === "hi" ? "सही" : "Correct";
+    tabIncorrect.innerText = lang === "hi" ? "गलत" : "Incorrect";
+    tabUnattempted.innerText = lang === "hi" ? "छोड़े गए" : "Unattempted";
+    showResult(currentTab);
+  }
+  loadQuestion();
+});
+
+// Timer
+function startTimer(){
+  timer = setInterval(()=>{
+    timeLeft--;
+    let min = String(Math.floor(timeLeft/60)).padStart(2,"0");
+    let sec = String(timeLeft%60).padStart(2,"0");
+    timerEl.innerText = `${lang==="hi"?"समय":"Time"}: ${min}:${sec}`;
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      endTest();
+    }
+  },1000);
+}
+
+// Load Question
+function loadQuestion(){
+  let q = questions[currentQuestion];
+  questionContainer.innerHTML = `
+    <div class="question-card">
+      <h3>${(currentQuestion+1)}. ${lang==="hi"?q.q_hi:q.q_en}</h3>
+      ${q.options.map((opt,i)=>`
+        <button class="option-btn ${answers[currentQuestion]===i?"selected":""}" onclick="selectOption(${i})">${opt}</button>
+      `).join("")}
+    </div>
+  `;
+  renderQNumbers();
+  updateNavigationButtons();
+}
+
+// Select Option
+function selectOption(i){
+  answers[currentQuestion] = i;
+  loadQuestion();
+}
+
+// Navigation buttons logic
+function updateNavigationButtons() {
+    if (currentQuestion === 0) {
+        prevBtn.style.visibility = 'hidden';
+    } else {
+        prevBtn.style.visibility = 'visible';
+    }
+
+    if (currentQuestion === questions.length - 1) {
+        nextBtn.innerText = lang === "hi" ? "टेस्ट सबमिट करें" : "Submit Test";
+        nextBtn.classList.remove("btn");
+        nextBtn.classList.add("btn-grey");
+    } else {
+        nextBtn.innerText = lang === "hi" ? "अगला प्रश्न" : "Next Question";
+        nextBtn.classList.add("btn");
+        nextBtn.classList.remove("btn-grey");
+    }
+}
+
+prevBtn.addEventListener("click", ()=>{
+  if(currentQuestion > 0){
+    currentQuestion--;
+    loadQuestion();
+  }
+});
+
+nextBtn.addEventListener("click", ()=>{
+  if(currentQuestion < questions.length-1){
+    currentQuestion++;
+    loadQuestion();
+  } else {
+    endTest();
+  }
+});
+
+// End Test
+function endTest(){
+  clearInterval(timer);
+  document.getElementById("test-section").classList.add("hidden");
+  resultSection.classList.remove("hidden");
+  showResult('correct');
+}
+
+// Show Result
+function showResult(filter){
+  currentTab = filter;
+  let correct=0,incorrect=0,unattempted=0;
+  questions.forEach((q,i)=>{
+    if(answers[i]==null){unattempted++;}
+    else if(answers[i]===q.answer){correct++;}
+    else{incorrect++;}
+  });
+
+  const totalAttempted = correct + incorrect;
+  const accuracy = totalAttempted > 0 ? ((correct / totalAttempted) * 100).toFixed(2) : 0;
+
+  scoreSummaryDiv.innerHTML = `
+    <p style="font-size:1.2em; font-weight:bold;">${lang==="hi"?"स्कोर":"Score"}: ${correct} / ${questions.length}</p>
+    <p>${lang==="hi"?"सही":"Correct"}: <strong>${correct}</strong></p>
+    <p>${lang==="hi"?"गलत":"Incorrect"}: <strong>${incorrect}</strong></p>
+    <p>${lang==="hi"?"छोड़े गए":"Unattempted"}: <strong>${unattempted}</strong></p>
+    <p>${lang==="hi"?"एक्यूरेसी":"Accuracy"}: <strong>${accuracy}%</strong></p>
+  `;
+
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(`tab-${filter}`).classList.add('active');
+
+  analysisDiv.innerHTML = "";
+  let filteredQuestions = [];
+  if(filter === 'correct'){
+    filteredQuestions = questions.filter((q, i) => answers[i] === q.answer);
+  } else if (filter === 'incorrect'){
+    filteredQuestions = questions.filter((q, i) => answers[i] !== null && answers[i] !== q.answer);
+  } else if (filter === 'unattempted'){
+    filteredQuestions = questions.filter((q, i) => answers[i] === null);
+  }
+
+  filteredQuestions.forEach(q => {
+    let qIndex = questions.indexOf(q);
+    let isCorrect = answers[qIndex] === q.answer;
+    let cardClass = isCorrect ? 'correct' : (answers[qIndex] === null ? 'unattempted' : 'incorrect');
+
+    analysisDiv.innerHTML += `
+      <div class="question-card ${cardClass}">
+        <h3>${qIndex+1}. ${lang==="hi"?q.q_hi:q.q_en}</h3>
+        ${q.options.map((opt,i)=>`
+          <button class="option-btn ${i===q.answer?'correct':(i===answers[qIndex]?'incorrect':'')}" disabled>${opt}</button>
+        `).join("")}
+        <br>
+        <div style="font-weight:bold;">${lang==="hi"?"सही उत्तर":"Correct Answer"}: ${q.options[q.answer]}</div>
+        <div style="margin-top:10px;">
+          <strong>${lang==="hi"?"समाधान":"Solution"}:</strong>
+          <pre>${lang==="hi"?q.solution_hi:q.solution_en}</pre>
+        </div>
+      </div>
+    `;
+  });
+
+  // Chart
+  new Chart(ctx,{
+    type:'pie',
+    data:{
+      labels:[lang==="hi"?"सही":"Correct",lang==="hi"?"गलत":"Incorrect",lang==="hi"?"छोड़े गए":"Unattempted"],
+      datasets:[{
+        data:[correct,incorrect,unattempted],
+        backgroundColor:['#22c55e','#ff4d4d','#3399ff']
+      }]
+    },
+    options:{responsive:true, maintainAspectRatio:false}
+  });
+}
+
+// Event listeners for result tabs
+tabCorrect.addEventListener("click", () => showResult('correct'));
+tabIncorrect.addEventListener("click", () => showResult('incorrect'));
+tabUnattempted.addEventListener("click", () => showResult('unattempted'));
+
+
+// Render Question Numbers inside Popup
+function renderQNumbers(){
+  qNumContainer.innerHTML = "";
+  questions.forEach((q,i)=>{
+    let status="unattempted";
+    if(answers[i]!=null) status="attempted";
+    if(i===currentQuestion) status="current";
+    let div = document.createElement("div");
+    div.className="question-num "+status;
+    div.innerHTML = (i+1);
+    div.onclick=()=>{currentQuestion=i; loadQuestion(); closeMenu();};
+    qNumContainer.appendChild(div);
+  });
+}
+
+// Popup toggle
+menuToggle.addEventListener("click", ()=>{
+  menuOverlay.classList.add("active");
+  testSection.classList.add("blur");
+  renderQNumbers();
+});
+closePopup.addEventListener("click", closeMenu);
+popupBack.addEventListener("click", closeMenu);
+function closeMenu(){
+  menuOverlay.classList.remove("active");
+  testSection.classList.remove("blur");
+}
+popupSubmit.addEventListener("click", ()=>{
+  closeMenu();
+  endTest();
+});
+
+// Initial load
+startTimer();
+loadQuestion();
+</script>
+</body>
+</html>
