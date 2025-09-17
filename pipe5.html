@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <title>मॉक टेस्ट - पाइप और टंकी (स्तर 6)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background:#f5f7fa; }
+    .container { max-width:800px; margin:auto; padding:20px; }
+    .card { background:#fff; padding:20px; margin-bottom:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+    button { padding:10px 15px; margin:5px; border:none; border-radius:6px; cursor:pointer; transition:0.2s; }
+    button:hover{transform:scale(1.02);}
+    .btn{background:linear-gradient(90deg,#007bff,#00aaff); color:white;font-weight:bold;}
+    .btn-grey{background:linear-gradient(90deg,#666,#999); color:white;}
+    .hidden{display:none;}
+    .timer{font-size:18px;font-weight:bold;color:#fff;background:linear-gradient(90deg,#ff4b2b,#ff416c);padding:5px 10px;border-radius:8px;display:inline-block;margin-bottom:15px;}
+    .tabs{display:flex;justify-content:space-around;margin:15px 0;}
+    .tab{flex:1;text-align:center;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;transition:0.2s;}
+    .tab.correct{background:linear-gradient(90deg,#b9fbc0,#22c55e);}
+    .tab.incorrect{background:linear-gradient(90deg,#ffb3b3,#ff4d4d);}
+    .tab.unattempted{background:linear-gradient(90deg,#cce5ff,#3399ff);}
+    .tab.active{border:2px solid #333;}
+    .question-card{margin-bottom:15px;border:1px solid #ddd;border-radius:10px;padding:15px;background:#fff;}
+    .question-card.correct{border-color:green;}
+    .question-card.incorrect{border-color:red;}
+    .question-card.unattempted{border-color:#00bfff;}
+    .mock-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:bold;font-size:20px;}
+    .question-num{position:relative;width:35px;height:35px;border-radius:50%;display:flex;justify-content:center;align-items:center;cursor:pointer;font-weight:bold;transition:0.2s;color:white;}
+    .question-num.unattempted{background-color: white; border: 1px solid black; color: black;}
+    .question-num.attempted{background-color: #007bff;}
+    .question-num.current{background-color: #ff4b2b;}
+    .question-num.correct{background-color: #22c55e;}
+    .question-num.incorrect{background-color: #ff4d4d;}
+    .question-num:hover{transform:scale(1.2);border:2px solid #333;}
+    .question-num .tooltip{visibility:hidden;background:#333;color:#fff;text-align:left;padding:5px 8px;border-radius:5px;position:absolute;top:-40px;left:50%;transform:translateX(-50%);z-index:10;white-space:nowrap;font-size:12px;}
+    .question-num:hover .tooltip{visibility:visible;}
+    #menu-overlay{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;z-index:1000;transition:0.3s;background:rgba(0,0,0,0.5);}
+    #menu-overlay.active{opacity:1;pointer-events:auto;}
+    #menu-popup{background:#fff;width:600px;max-width:90%;max-height:90%;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:flex;flex-direction:column;transform:scale(0.7);opacity:0;transition:0.3s ease-in-out;position:relative;}
+    #menu-overlay.active #menu-popup{transform:scale(1);opacity:1;}
+    #menu-popup h3 { margin-top:0; text-align:center; }
+    #menu-popup #close-popup{position:absolute;top:10px;right:15px;font-size:20px;cursor:pointer;color:#333;font-weight:bold;}
+    #question-numbers{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;overflow-y:auto;flex-grow:1;justify-content:center;}
+    #popup-submit,#popup-back{margin-top:10px;padding:12px;font-size:16px;}
+    #test-section.blur{filter:blur(5px);transition:0.3s;}
+    #lang-toggle{cursor:pointer;font-size:16px;padding:5px 10px;border-radius:6px;border:1px solid #ccc;background:#f0f0f0;}
+    @media(max-width:500px){#menu-popup{width:90%;}.question-num{width:30px;height:30px;font-size:14px;}button{font-size:14px;padding:8px 10px;}}
+    .option-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        color: #333;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+    .option-btn:hover { background-color: #e0e0e0; }
+    .option-btn.selected { background-color: #007bff; color: white; border-color: #007bff; }
+    .option-btn.correct { background-color: #22c55e; color: white; border-color: #22c55e; }
+    .option-btn.incorrect { background-color: #ff4d4d; color: white; border-color: #ff4d4d; }
+    .question-card pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: inherit;
+    }
+    #score-summary p {
+      margin: 5px 0;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="mock-header card">
+    <div id="mock-title">पाइप और टंकी मॉक टेस्ट (स्तर 6)</div>
+    <div style="display:flex;align-items:center;">
+      <button id="lang-toggle" class="btn-grey">English</button>
+      <div id="menu-toggle" style="margin-left: 10px; cursor:pointer;">&#8942;</div>
+    </div>
+  </div>
+
+  <div id="menu-overlay">
+    <div id="menu-popup">
+      <span id="close-popup">&times;</span>
+      <h3 id="menu-title">प्रश्न</h3>
+      <div id="question-numbers"></div>
+      <button id="popup-submit" class="btn">सबमिट करें</button>
+      <button id="popup-back" class="btn-grey">वापस जाएँ</button>
+    </div>
+  </div>
+<div id="test-section" class="card">
+    <div class="timer" id="timer">समय: 25:00</div>
+    <div id="question-container"></div>
+    <div id="navigation-buttons" style="display: flex; justify-content: space-between;">
+        <button id="prev-btn" class="btn-grey">पिछला प्रश्न</button>
+        <button id="next-btn" class="btn">अगला प्रश्न</button>
+    </div>
+  </div>
+
+  <div id="result-section" class="card hidden">
+    <h2>आपका परिणाम</h2>
+    <div id="score-summary"></div>
+    <div class="tabs">
+      <div class="tab correct" id="tab-correct">सही</div>
+      <div class="tab incorrect" id="tab-incorrect">गलत</div>
+      <div class="tab unattempted" id="tab-unattempted">छोड़े गए</div>
+    </div>
+    <div id="analysis"></div>
+    <canvas id="resultChart" width="300" height="300"></canvas>
+  </div>
+</div>
+<script>
+let questions = [
+  {
+    q_hi: "दो भरने वाले पाइप A और B एक टंकी को क्रमशः 15 घंटे और 12 घंटे में भर सकते हैं, जबकि एक खाली करने वाला पाइप C इसे 4 घंटे में खाली कर सकता है। यदि इन पाइपों को क्रमशः सुबह 8 बजे, 9 बजे और 11 बजे खोला जाता है, तो टंकी किस समय खाली हो जाएगी?",
+    q_en: "Two filling pipes A and B can fill a tank in 15 hours and 12 hours respectively, while an emptying pipe C can empty it in 4 hours. If the pipes are opened at 8 AM, 9 AM, and 11 AM respectively, at what time will the tank be empty?",
+    options: ["दोपहर 2:50 बजे", "दोपहर 2:40 बजे", "दोपहर 3:00 बजे", "दोपहर 3:10 बजे"],
+    answer: 1,
+    solution_hi: "कुल क्षमता = LCM(15, 12, 4) = 60 इकाई।\nA की क्षमता = +4 इकाई/घंटा, B की = +5, C की = -15।\nसुबह 8 से 9 बजे (1 घंटा): केवल A काम करता है। भरा हुआ = 1 * 4 = 4 इकाई।\nसुबह 9 से 11 बजे (2 घंटे): A और B काम करते हैं। भरा हुआ = 2 * (4+5) = 18 इकाई।\nसुबह 11 बजे तक कुल भरा हुआ = 4 + 18 = 22 इकाई।\nअब C को भी खोला जाता है। तीनों की संयुक्त दर = 4 + 5 - 15 = -6 इकाई/घंटा (यानी खाली हो रहा है)।\nटंकी को पूरी तरह खाली होने में लगा समय = 22 / 6 = 11/3 घंटे = 3 घंटे 40 मिनट।\nसुबह 11 बजे + 3 घंटे 40 मिनट = दोपहर 2:40 बजे।",
+    solution_en: "Total capacity = LCM(15, 12, 4) = 60 units. Efficiency of A = +4, B = +5, C = -15 units/hr. 8 AM to 9 AM (1 hr): Only A works. Filled = 1 * 4 = 4 units. 9 AM to 11 AM (2 hrs): A and B work. Filled = 2 * (4+5) = 18 units. Total filled by 11 AM = 4+18=22 units. Now C is opened. Combined rate = 4+5-15 = -6 units/hr (emptying). Time to empty the tank = 22 / 6 = 11/3 hours = 3 hours and 40 minutes. Time = 11:00 AM + 3h 40m = 2:40 PM."
+  },
+  {
+    q_hi: "एक टंकी में तीन नल A, B, C हैं। A और B एक साथ मिलकर टंकी को 10 घंटे में भर सकते हैं। B और C एक साथ 15 घंटे में भर सकते हैं, जबकि A और C मिलकर 12 घंटे में भर सकते हैं। यदि तीनों पाइप एक साथ खोले जाते हैं, तो वे टंकी को कितने समय में भरेंगे?",
+    q_en: "A tank has three taps A, B, C. A and B together can fill the tank in 10 hours. B and C together can fill it in 15 hours, while A and C together can fill it in 12 hours. If all three pipes are opened together, in how much time will they fill the tank?",
+    options: ["7 घंटे", "8 घंटे", "9 घंटे", "10 घंटे"],
+    answer: 1,
+    solution_hi: "कुल क्षमता = LCM(10, 15, 12) = 60 इकाई।\n(A+B) की क्षमता = 60/10 = 6 इकाई/घंटा।\n(B+C) की क्षमता = 60/15 = 4 इकाई/घंटा।\n(A+C) की क्षमता = 60/12 = 5 इकाई/घंटा।\n2(A+B+C) की कुल क्षमता = 6+4+5 = 15 इकाई।\n(A+B+C) की संयुक्त क्षमता = 15/2 = 7.5 इकाई/घंटा।\nतीनों को मिलकर टंकी भरने में लगा समय = 60 / 7.5 = 8 घंटे।",
+    solution_en: "Total capacity = LCM(10, 15, 12) = 60 units. Eff of (A+B) = 6, (B+C) = 4, (A+C) = 5. Summing efficiencies: 2(A+B+C) = 6+4+5 = 15. Combined eff of (A+B+C) = 15/2 = 7.5 units/hr. Time for all three to fill the tank = 60/7.5 = 8 hours."
+  },
+  {
+    q_hi: "एक टंकी को पाइप A से 12 मिनट में और पाइप B से 15 मिनट में भरा जा सकता है। दोनों को एक साथ खोला जाता है, लेकिन 3 मिनट बाद A को बंद कर दिया जाता है। B अकेले टंकी के शेष भाग को कितने समय में भरेगा?",
+    q_en: "A tank can be filled by pipe A in 12 minutes and by pipe B in 15 minutes. Both are opened together, but after 3 minutes A is closed. In what time will B alone fill the remaining part of the tank?",
+    options: ["8.25 मिनट", "9 मिनट", "10 मिनट", "12 मिनट"],
+    answer: 0,
+    solution_hi: "कुल क्षमता = LCM(12, 15) = 60 इकाई।\nA की क्षमता = +5 इकाई/मिनट, B की = +4।\n3 मिनट में A और B द्वारा भरा गया = 3 * (5+4) = 27 इकाई।\nशेष क्षमता = 60 - 27 = 33 इकाई।\nअब A को बंद कर दिया गया। B को शेष भाग भरने में लगा समय = 33 / 4 = 8.25 मिनट।",
+    solution_en: "Total capacity = LCM(12, 15) = 60 units. A's eff = +5 units/min, B's eff = +4. In 3 mins, A and B fill 3 * (5+4) = 27 units. Remaining capacity = 60 - 27 = 33 units. Now A is closed. Time for B to fill the remaining part = 33 / 4 = 8.25 minutes."
+  },
+  {
+    q_hi: "एक टंकी में एक इनलेट पाइप है जो इसे 4 घंटे में भर सकता है, और एक आउटलेट पाइप है जो इसे 6 घंटे में खाली कर सकता है। यदि टंकी आधी भरी हुई है और दोनों पाइप एक साथ खोले जाते हैं, तो टंकी को भरने में कितना समय लगेगा?",
+    q_en: "A tank has an inlet pipe that can fill it in 4 hours, and an outlet pipe that can empty it in 6 hours. If the tank is half full and both pipes are opened together, how much time will it take to fill the tank?",
+    options: ["2 घंटे", "3 घंटे", "6 घंटे", "8 घंटे"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(4, 6) = 12 इकाई।\nइनलेट की क्षमता = +3 इकाई/घंटा, आउटलेट की = -2।\nटंकी पहले से 1/2 भरी है, यानी 12 / 2 = 6 इकाई भरी है।\nशेष भाग जिसे भरना है = 12 - 6 = 6 इकाई।\nदोनों पाइपों की संयुक्त दर = 3 - 2 = 1 इकाई/घंटा।\nशेष भाग भरने में लगा समय = 6 / 1 = 6 घंटे।",
+    solution_en: "Total capacity = LCM(4, 6) = 12 units. Inlet eff = +3 units/hr, Outlet eff = -2. The tank is already half full, which is 12 / 2 = 6 units. Remaining part to be filled = 12 - 6 = 6 units. The combined rate of both pipes = 3 - 2 = 1 unit/hr. Time to fill the remaining part = 6 / 1 = 6 hours."
+  },
+  {
+    q_hi: "एक खाली टंकी में 3 पाइप A, B और C हैं। A और B इसे 6 घंटे और 9 घंटे में भर सकते हैं। एक खाली करने वाला पाइप C इसे 18 घंटे में खाली कर सकता है। यदि तीनों पाइप एक साथ खोले जाते हैं, तो टंकी को पूरी तरह भरने में कुल कितना समय लगेगा?",
+    q_en: "An empty tank has 3 pipes A, B and C. A and B can fill it in 6 hours and 9 hours. An emptying pipe C can empty it in 18 hours. If all three pipes are opened together, what is the total time to fill the tank completely?",
+    options: ["4 घंटे", "4.5 घंटे", "5 घंटे", "5.5 घंटे"],
+    answer: 1,
+    solution_hi: "कुल क्षमता = LCM(6, 9, 18) = 18 इकाई।\nA की क्षमता = +3 इकाई/घंटा, B की = +2, C की = -1।\nतीनों की संयुक्त दर = 3+2-1 = 4 इकाई/घंटा।\nटंकी को भरने में लगा समय = 18 / 4 = 4.5 घंटे।",
+    solution_en: "Total capacity = LCM(6, 9, 18) = 18 units. A's eff = +3, B's = +2, C's = -1 units/hr. Combined rate of all three = 3+2-1 = 4 units/hr. Time to fill the tank = 18 / 4 = 4.5 hours."
+  },
+  {
+    q_hi: "एक टंकी में एक इनलेट पाइप है जो इसे 8 घंटे में भर सकता है। इसमें एक रिसाव भी है जो भरी हुई टंकी को 12 घंटे में खाली कर सकता है। यदि रिसाव को बीच में 2 घंटे के लिए बंद कर दिया जाता है, तो टंकी को भरने में कुल कितना समय लगेगा?",
+    q_en: "A tank has an inlet pipe that can fill it in 8 hours. It also has a leak that can empty a full tank in 12 hours. If the leak is closed for 2 hours in between, what is the total time to fill the tank?",
+    options: ["20 घंटे", "22 घंटे", "24 घंटे", "26 घंटे"],
+    answer: 0,
+    solution_hi: "कुल क्षमता = LCM(8, 12) = 24 इकाई।\nभरने वाले पाइप की क्षमता = +3 इकाई/घंटा।\nरिसाव की क्षमता = -2 इकाई/घंटा।\nसंयुक्त दर (पाइप + रिसाव) = 3-2 = 1 इकाई/घंटा।\nयदि रिसाव 2 घंटे के लिए बंद रहता है, तो उस समय केवल भरने वाला पाइप काम करता है।\n2 घंटे में भरा हुआ = 2 × 3 = 6 इकाई।\nशेष भाग जिसे भरना है = 24 - 6 = 18 इकाई।\nअब रिसाव फिर से खुल गया है। शेष भाग को भरने में लगा समय = 18 / 1 = 18 घंटे।\nकुल समय = 2 (जब रिसाव बंद था) + 18 (जब रिसाव खुला था) = 20 घंटे।",
+    solution_en: "Total capacity = LCM(8, 12) = 24 units. Filling pipe eff = +3 units/hr. Leak eff = -2 units/hr. Combined rate (pipe+leak) = 3-2=1 unit/hr. If the leak is closed for 2 hours, only the filling pipe works. Filled in 2 hours = 2*3=6 units. Remaining part=24-6=18 units. Now the leak is reopened. Time for remaining part = 18/1=18 hours. Total time = 2 (leak closed) + 18 (leak open) = 20 hours."
+  },
+  {
+    q_hi: "एक टंकी में तीन पाइप A, B और C हैं। A और B एक टंकी को क्रमशः 12 और 15 घंटे में भर सकते हैं। C इसे 20 घंटे में खाली कर सकता है। यदि A को सुबह 6 बजे, B को 7 बजे और C को 8 बजे खोला जाता है, तो टंकी किस समय भर जाएगी?",
+    q_en: "A tank has three pipes A, B and C. A and B can fill a tank in 12 and 15 hours respectively. C can empty it in 20 hours. If A is opened at 6 AM, B at 7 AM and C at 8 AM, at what time will the tank be full?",
+    options: ["दोपहर 3:00 बजे", "दोपहर 3:30 बजे", "दोपहर 3:40 बजे", "दोपहर 4:00 बजे"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(12, 15, 20) = 60 इकाई।\nA की क्षमता = +5, B की = +4, C की = -3 इकाई/घंटा।\n6 से 7 बजे (1 घंटा): केवल A खुला था। भरा हुआ = 1*5=5 इकाई।\n7 से 8 बजे (1 घंटा): A और B खुले थे। भरा हुआ = 1*(5+4)=9 इकाई।\nसुबह 8 बजे तक कुल भरा हुआ = 5+9=14 इकाई।\nअब तीनों पाइप एक साथ काम करते हैं। संयुक्त दर = 5+4-3 = 6 इकाई/घंटा।\nशेष क्षमता = 60-14=46 इकाई।\nशेष भरने में लगा समय = 46/6 = 7.66 घंटे = 7 घंटे 40 मिनट।\nसुबह 8 बजे + 7 घंटे 40 मिनट = दोपहर 3:40 बजे।",
+    solution_en: "Total capacity = LCM(12, 15, 20) = 60 units. A's eff = +5, B's = +4, C's = -3 units/hr. 6 to 7 AM (1 hr): Only A works, fills 5 units. 7 to 8 AM (1 hr): A and B work, fill 9 units. Total filled by 8 AM = 14 units. From 8 AM, all three work. Combined rate = 5+4-3 = 6 units/hr. Remaining capacity = 60-14=46 units. Time to fill remaining = 46/6 = 7.66 hours = 7 hours 40 minutes. 8 AM + 7h 40m = 3:40 PM."
+  },
+  {
+    q_hi: "एक टंकी को भरने में पाइप A, B की तुलना में 3 गुना तेज है। यदि A और B मिलकर टंकी को 18 मिनट में भरते हैं, तो B को अकेले टंकी भरने में कितना समय लगेगा?",
+    q_en: "Pipe A is 3 times as fast as B in filling a tank. If A and B together fill the tank in 18 minutes, how much time will B alone take to fill the tank?",
+    options: ["24 मिनट", "48 मिनट", "60 मिनट", "72 मिनट"],
+    answer: 3,
+    solution_hi: "दक्षता का अनुपात: A : B = 3 : 1।\nसंयुक्त दक्षता = 3+1=4।\nकुल क्षमता = संयुक्त दक्षता × समय = 4 × 18 = 72 इकाई।\nB को अकेले टंकी भरने में लगा समय = 72 / B की दक्षता = 72 / 1 = 72 मिनट।",
+    solution_en: "Efficiency ratio: A:B = 3:1. Combined efficiency = 3+1=4. Total capacity = Combined eff * time = 4 * 18 = 72 units. Time for B alone = 72 / B's eff = 72 / 1 = 72 minutes."
+  },
+  {
+    q_hi: "दो पाइप A और B एक टंकी को क्रमशः 20 और 30 घंटे में भर सकते हैं। एक पाइप C इसे 60 घंटे में खाली कर सकता है। तीनों पाइप एक साथ खोले जाते हैं। यदि 10 घंटे बाद पाइप C को बंद कर दिया जाता है, तो टंकी को पूरी तरह से भरने में कितना समय लगेगा?",
+    q_en: "Two pipes A and B can fill a tank in 20 and 30 hours respectively. A pipe C can empty it in 60 hours. All three pipes are opened together. If after 10 hours, pipe C is closed, in what time will the tank be full?",
+    options: ["12 घंटे", "13 घंटे", "14 घंटे", "15 घंटे"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(20, 30, 60) = 60 इकाई।\nA की क्षमता = +3, B की = +2, C की = -1 इकाई/घंटा।\nतीनों की संयुक्त दर = 3+2-1 = 4 इकाई/घंटा।\nपहले 10 घंटों में भरा हुआ = 10 × 4 = 40 इकाई।\nशेष क्षमता = 60 - 40 = 20 इकाई।\nअब C बंद है। A और B की संयुक्त दर = 3+2 = 5 इकाई/घंटा।\nशेष भरने में लगा समय = 20 / 5 = 4 घंटे।\nकुल समय = 10 (पहले का) + 4 (शेष) = 14 घंटे।",
+    solution_en: "Total capacity = LCM(20, 30, 60) = 60 units. A's eff = +3, B's = +2, C's = -1 units/hr. Combined rate of all three = 3+2-1 = 4 units/hr. In the first 10 hours, filled = 10 * 4 = 40 units. Remaining capacity = 60-40=20 units. C is closed. A and B's combined rate = 3+2=5 units/hr. Time for remaining part=20/5=4 hours. Total time = 10+4=14 hours."
+  },
+  {
+    q_hi: "एक टंकी में एक रिसाव है जो भरी हुई टंकी को 12 घंटे में खाली कर सकता है। एक इनलेट पाइप है जो 15 लीटर प्रति मिनट की दर से टंकी में पानी भरता है। यदि टंकी को खाली होने में 20 घंटे लगते हैं जब इनलेट पाइप खुला होता है, तो टंकी की क्षमता क्या है?",
+    q_en: "A tank has a leak that can empty a full tank in 12 hours. An inlet pipe fills water into the tank at a rate of 15 liters per minute. If it takes 20 hours for the tank to be empty when the inlet pipe is open, what is the capacity of the tank?",
+    options: ["24000 लीटर", "27000 लीटर", "30000 लीटर", "32000 लीटर"],
+    answer: 1,
+    solution_hi: "मान लें टंकी की क्षमता C लीटर है।\nरिसाव की दर = C/12 लीटर/घंटा।\nइनलेट पाइप की दर = 15 * 60 = 900 लीटर/घंटा।\nजब दोनों खुले हों, तो 20 घंटे में टंकी खाली हो जाती है।\nकुल खाली करने की दर = (C/12) - 900 = C/20।\nC/12 - C/20 = 900\n(5C-3C)/60 = 900\n2C/60 = 900\nC/30 = 900\nC = 900 * 30 = 27000 लीटर।",
+    solution_en: "Let tank capacity be C liters. Leak rate = C/12 liters/hr. Inlet rate = 15 * 60 = 900 liters/hr. When both are open, the tank empties in 20 hours. This means the net emptying rate is C/20 L/hr. Net emptying rate = Leak rate - Inlet rate. C/20 = C/12 - 900. Rearranging, 900 = C/12 - C/20 = (5C - 3C) / 60 = 2C / 60 = C / 30. So, C = 900 * 30 = 27000 liters."
+  },
+  {
+    q_hi: "दो पाइप A और B एक टंकी को क्रमशः 25 और 30 मिनट में भर सकते हैं। दोनों पाइप एक साथ खोले जाते हैं। यदि 5 मिनट बाद A को बंद कर दिया जाता है, तो टंकी को पूरी तरह से भरने में कुल कितना समय लगेगा?",
+    q_en: "Two pipes A and B can fill a tank in 25 and 30 minutes respectively. Both pipes are opened together. If after 5 minutes A is closed, what is the total time to fill the tank completely?",
+    options: ["20 मिनट", "22 मिनट", "24 मिनट", "25 मिनट"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(25, 30) = 150 इकाई।\nA की क्षमता = +6 इकाई/मिनट, B की = +5।\n5 मिनट में A और B द्वारा भरा गया = 5 * (6+5) = 55 इकाई।\nशेष क्षमता = 150 - 55 = 95 इकाई।\nअब A बंद है, तो B अकेला काम करेगा।\nशेष भरने में लगा समय = 95 / 5 = 19 मिनट।\nकुल समय = 5 (पहले का) + 19 (शेष) = 24 मिनट।",
+    solution_en: "Total capacity = LCM(25, 30) = 150 units. A's eff = +6 units/min, B's = +5. In 5 mins, A and B fill 5 * (6+5) = 55 units. Remaining capacity = 150 - 55 = 95 units. A is closed. B alone works. Time for remaining part = 95/5 = 19 minutes. Total time = 5 + 19 = 24 minutes."
+  },
+  {
+    q_hi: "एक टंकी में एक रिसाव है जो इसे 8 घंटे में खाली कर सकता है। एक पाइप टंकी में 6 लीटर प्रति मिनट पानी भरता है। जब पाइप खुला होता है, तो रिसाव भरी हुई टंकी को 10 घंटे में खाली कर देता है। टंकी की क्षमता क्या है?",
+    q_en: "A tank has a leak that can empty it in 8 hours. A pipe fills water into the tank at 6 liters per minute. When the pipe is open, the leak empties the full tank in 10 hours. What is the capacity of the tank?",
+    options: ["12000 लीटर", "13500 लीटर", "14400 लीटर", "15000 लीटर"],
+    answer: 2,
+    solution_hi: "मान लें टंकी की क्षमता C लीटर है।\nरिसाव की दर = C/8 लीटर/घंटा।\nभरने वाले पाइप की दर = 6 * 60 = 360 लीटर/घंटा।\nजब दोनों खुले हों, तो टंकी 10 घंटे में खाली हो जाती है।\nखाली करने की संयुक्त दर = (रिसाव की दर - भरने की दर) = (C/8 - 360)।\nC / (C/8 - 360) = 10।\nC = 10 * (C/8 - 360) = 1.25C - 3600।\n0.25C = 3600।\nC = 3600 / 0.25 = 14400 लीटर।",
+    solution_en: "Let tank capacity be C liters. Leak rate = C/8 L/hr. Fill rate = 6 * 60 = 360 L/hr. When both are open, tank empties in 10 hrs. The combined rate is C/10 L/hr. Combined rate = Leak rate - Fill rate. C/10 = C/8 - 360. 360 = C/8 - C/10 = (5C-4C)/40 = C/40. C = 360 * 40 = 14400 liters."
+  },
+  {
+    q_hi: "एक टंकी में दो पाइप हैं। पहला पाइप इसे 20 मिनट में भरता है। दूसरा पाइप इसे 30 मिनट में भरता है। तीसरा पाइप इसे 45 मिनट में खाली करता है। यदि तीनों पाइप एक साथ 5 मिनट के लिए खोले जाते हैं, और फिर खाली करने वाले पाइप को बंद कर दिया जाता है, तो टंकी को पूरी तरह भरने में कुल कितना समय लगेगा?",
+    q_en: "A tank has three pipes. The first can fill it in 20 minutes. The second can fill it in 30 minutes. The third can empty it in 45 minutes. If all three pipes are opened together for 5 minutes, and then the emptying pipe is closed, what is the total time to fill the tank completely?",
+    options: ["12.5 मिनट", "13.33 मिनट", "14.5 मिनट", "15.5 मिनट"],
+    answer: 1,
+    solution_hi: "कुल क्षमता = LCM(20, 30, 45) = 180 इकाई।\nपाइप 1 = +9, पाइप 2 = +6, पाइप 3 = -4 इकाई/मिनट।\nपहले 5 मिनट में (1+2+3) द्वारा भरा गया = 5 * (9+6-4) = 5 * 11 = 55 इकाई।\nशेष क्षमता = 180 - 55 = 125 इकाई।\nअब खाली करने वाला पाइप बंद है। भरने वाले पाइपों की संयुक्त दर = 9+6 = 15 इकाई/मिनट।\nशेष भरने में लगा समय = 125 / 15 = 25/3 मिनट = 8.33 मिनट।\nकुल समय = 5 + 8.33 = 13.33 मिनट।",
+    solution_en: "Total capacity = LCM(20, 30, 45) = 180 units. Pipe 1 eff = +9, Pipe 2 = +6, Pipe 3 = -4 units/min. In the first 5 mins, all three work. Filled = 5 * (9+6-4) = 55 units. Remaining = 180 - 55 = 125 units. Now the third pipe is closed. The combined rate of the filling pipes = 9+6 = 15 units/min. Time for remaining part = 125 / 15 = 8.33 mins. Total time = 5 + 8.33 = 13.33 minutes."
+  },
+  {
+    q_hi: "एक टंकी में तीन पाइप A, B, C हैं जो इसे क्रमशः 6, 8, और 12 घंटे में भर सकते हैं। यदि तीनों पाइपों को एक साथ 2 घंटे के लिए खोला जाता है, और फिर A और B को बंद कर दिया जाता है, तो शेष टंकी को C कितने समय में भरेगा?",
+    q_en: "A tank has three pipes A, B, C that can fill it in 6, 8, and 12 hours respectively. If all three pipes are opened together for 2 hours, and then A and B are closed, in what time will C fill the remaining tank?",
+    options: ["2.5 घंटे", "3 घंटे", "3.5 घंटे", "4 घंटे"],
+    answer: 1,
+    solution_hi: "कुल क्षमता = LCM(6, 8, 12) = 24 इकाई।\nA की क्षमता = +4, B की = +3, C की = +2 इकाई/घंटा।\nतीनों की संयुक्त दर = 4+3+2 = 9 इकाई/घंटा।\n2 घंटे में भरा हुआ = 2 × 9 = 18 इकाई।\nशेष क्षमता = 24 - 18 = 6 इकाई।\nअब A और B बंद हैं। शेष भाग को C अकेला भरेगा।\nशेष भरने में लगा समय = 6 / 2 = 3 घंटे।",
+    solution_en: "Total capacity = LCM(6, 8, 12) = 24 units. A's eff = +4, B's = +3, C's = +2 units/hr. Combined rate of all three = 4+3+2 = 9 units/hr. In 2 hours, filled = 2 * 9 = 18 units. Remaining capacity = 24 - 18 = 6 units. A and B are closed. C alone will fill the rest. Time for C = 6 / 2 = 3 hours."
+  },
+  {
+    q_hi: "पाइप A, B की तुलना में 4 गुना तेज है। यदि A और B मिलकर एक टंकी को 20 मिनट में भर सकते हैं, तो B को अकेले टंकी भरने में कितना समय लगेगा?",
+    q_en: "Pipe A is 4 times as fast as B. If A and B together can fill a tank in 20 minutes, how much time will B alone take to fill the tank?",
+    options: ["80 मिनट", "90 मिनट", "100 मिनट", "110 मिनट"],
+    answer: 2,
+    solution_hi: "दक्षता का अनुपात: A : B = 4 : 1।\nसंयुक्त दक्षता = 4+1 = 5।\nकुल क्षमता = 5 × 20 = 100 इकाई।\nB को अकेले टंकी भरने में लगा समय = 100 / 1 = 100 मिनट।",
+    solution_en: "Efficiency ratio: A:B = 4:1. Combined eff = 4+1 = 5. Total capacity = 5 * 20 = 100 units. Time for B alone = 100 / 1 = 100 minutes."
+  },
+  {
+    q_hi: "एक टंकी में एक रिसाव है जो इसे 15 घंटे में खाली कर सकता है। एक पाइप टंकी में 25 लीटर प्रति मिनट पानी भरता है। यदि दोनों खुले होते हैं, तो टंकी को खाली होने में 20 घंटे लगते हैं। टंकी की क्षमता क्या है?",
+    q_en: "A tank has a leak that can empty it in 15 hours. A pipe fills water at 25 liters per minute. If both are open, it takes 20 hours for the tank to be empty. What is the capacity of the tank?",
+    options: ["80000 लीटर", "85000 लीटर", "90000 लीटर", "95000 लीटर"],
+    answer: 2,
+    solution_hi: "मान लें टंकी की क्षमता C लीटर है।\nरिसाव की दर = C/15 लीटर/घंटा।\nभरने वाले पाइप की दर = 25 * 60 = 1500 लीटर/घंटा।\nजब दोनों खुले हों, तो टंकी 20 घंटे में खाली हो जाती है।\nखाली करने की संयुक्त दर = रिसाव - भरने वाला = C/15 - 1500।\nC / (C/15 - 1500) = 20।\nC = 20 * (C/15 - 1500) = 4C/3 - 30000।\nC - 4C/3 = -30000।\n(-C/3) = -30000।\nC = 90000 लीटर।",
+    solution_en: "Let capacity be C. Leak rate = C/15 L/hr. Fill rate = 25*60 = 1500 L/hr. Both open, tank empties in 20 hrs. Combined rate = C/15 - 1500. Time = C/Combined Rate. 20 = C / (C/15 - 1500). 20(C/15-1500)=C. 4C/3 - 30000 = C. C/3 = 30000. C = 90000 liters."
+  },
+  {
+    q_hi: "एक टंकी में दो पाइप हैं A और B, जो इसे क्रमशः 60 मिनट और 75 मिनट में भर सकते हैं। एक तीसरा पाइप C, जो इसे 45 मिनट में खाली कर सकता है, खोला जाता है। तीनों को एक साथ खोला जाता है, लेकिन 10 मिनट बाद C को बंद कर दिया जाता है। टंकी को भरने में कुल कितना समय लगेगा?",
+    q_en: "A tank has two pipes A and B that can fill it in 60 minutes and 75 minutes respectively. A third pipe C, that can empty it in 45 minutes, is opened. All three are opened together, but after 10 minutes C is closed. What is the total time to fill the tank?",
+    options: ["35 मिनट", "38 मिनट", "40.74 मिनट", "42.5 मिनट"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(60, 75, 45) = 900 इकाई।\nA की क्षमता = +15, B की = +12, C की = -20 इकाई/मिनट।\nतीनों की संयुक्त दर = 15+12-20 = 7 इकाई/मिनट।\nपहले 10 मिनट में भरा हुआ = 10 * 7 = 70 इकाई।\nशेष क्षमता = 900 - 70 = 830 इकाई।\nअब C बंद है। A और B की संयुक्त दर = 15+12 = 27 इकाई/मिनट।\nशेष भरने में लगा समय = 830 / 27 = 30.74 मिनट।\nकुल समय = 10 + 30.74 = 40.74 मिनट।",
+    solution_en: "Total capacity = LCM(60, 75, 45) = 900 units. A's eff = +15, B's = +12, C's = -20 units/min. Combined rate = 15+12-20=7 units/min. In 10 mins, filled = 10*7=70 units. Remaining = 900-70=830 units. C is closed. A+B rate = 15+12=27 units/min. Time for remaining = 830/27 = 30.74 mins. Total time = 10+30.74=40.74 minutes."
+  },
+  {
+    q_hi: "एक टंकी में दो भरने वाले पाइप हैं। पहला इसे 8 घंटे में भरता है। दूसरा इसे 12 घंटे में भरता है। टंकी में एक खाली करने वाला पाइप भी है। यदि तीनों पाइप एक साथ खोले जाते हैं, तो टंकी 6 घंटे में भर जाती है। खाली करने वाला पाइप अकेले टंकी को कितने समय में खाली करेगा?",
+    q_en: "A tank has two filling pipes. The first fills it in 8 hours. The second fills it in 12 hours. The tank also has an emptying pipe. If all three pipes are opened together, the tank is filled in 6 hours. In what time will the emptying pipe alone empty the tank?",
+    options: ["20 घंटे", "22 घंटे", "24 घंटे", "25 घंटे"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(8, 12, 6) = 24 इकाई।\nपाइप 1 की क्षमता = +3, पाइप 2 की = +2 इकाई/घंटा।\nतीनों की संयुक्त क्षमता = 24 / 6 = +4 इकाई/घंटा।\nखाली करने वाले पाइप की क्षमता = (पाइप 1 + पाइप 2) - (संयुक्त क्षमता) = (3+2) - 4 = 1 इकाई/घंटा।\nखाली करने वाले पाइप को टंकी खाली करने में लगा समय = 24 / 1 = 24 घंटे।",
+    solution_en: "Total capacity = LCM(8, 12, 6) = 24 units. Pipe 1's eff = +3, Pipe 2's eff = +2 units/hr. Combined eff of all three = 24/6 = +4 units/hr. Emptying pipe's eff = (Pipe1+Pipe2) eff - Combined eff = (3+2)-4 = 1 unit/hr. Time for emptying pipe = 24/1 = 24 hours."
+  },
+  {
+    q_hi: "एक खाली टंकी में एक पाइप A है जो इसे 15 घंटे में भर सकता है। एक पाइप B जो इसे 20 घंटे में भर सकता है। दोनों को एक साथ खोला जाता है, लेकिन 4 घंटे बाद, एक रिसाव के कारण दोनों पाइपों की दक्षता 20% कम हो जाती है। टंकी को भरने में कुल कितना समय लगेगा?",
+    q_en: "An empty tank has a pipe A that can fill it in 15 hours. A pipe B that can fill it in 20 hours. Both are opened together, but after 4 hours, due to a leak, the efficiency of both pipes reduces by 20%. What is the total time to fill the tank?",
+    options: ["9.2 घंटे", "9.71 घंटे", "10.2 घंटे", "10.7 घंटे"],
+    answer: 1,
+    solution_hi: "कुल क्षमता = LCM(15, 20) = 60 इकाई।\nA की क्षमता = +4, B की = +3 इकाई/घंटा।\nसंयुक्त दर = 4+3 = 7 इकाई/घंटा।\nपहले 4 घंटे में भरा हुआ = 4 × 7 = 28 इकाई।\nशेष क्षमता = 60 - 28 = 32 इकाई।\nअब दक्षता 20% कम हो गई। नई संयुक्त दर = 7 × (1 - 0.20) = 7 × 0.8 = 5.6 इकाई/घंटा।\nशेष भरने में लगा समय = 32 / 5.6 = 5.71 घंटे।\nकुल समय = 4 + 5.71 = 9.71 घंटे।",
+    solution_en: "Total capacity = LCM(15, 20) = 60 units. A's eff = +4, B's = +3 units/hr. Combined rate = 4+3=7 units/hr. In first 4 hours, filled = 4*7=28 units. Remaining capacity = 60-28=32 units. Now efficiency is reduced by 20%. New combined rate = 7 * (1-0.2) = 5.6 units/hr. Time for remaining part = 32/5.6=5.71 hours. Total time = 4+5.71 = 9.71 hours."
+  },
+  {
+    q_hi: "एक पाइप A एक टंकी को 12 घंटे में भरता है। एक पाइप B इसे 15 घंटे में भरता है। दोनों को एक साथ खोला जाता है। 3 घंटे बाद, एक रिसाव विकसित होता है जो टंकी को 20 घंटे में खाली कर सकता है। टंकी को भरने में कुल कितना समय लगेगा?",
+    q_en: "A pipe A can fill a tank in 12 hours. A pipe B can fill it in 15 hours. Both are opened together. After 3 hours, a leak develops that can empty the tank in 20 hours. What is the total time to fill the tank from the beginning?",
+    options: ["7.5 घंटे", "8 घंटे", "8.5 घंटे", "9 घंटे"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(12, 15, 20) = 60 इकाई।\nA की क्षमता = +5, B की = +4, रिसाव की = -3 इकाई/घंटा।\nपहले 3 घंटे में A और B द्वारा भरा गया = 3 * (5+4) = 27 इकाई।\nशेष क्षमता = 60 - 27 = 33 इकाई।\nअब रिसाव खुल गया है। तीनों की संयुक्त दर = 5+4-3 = 6 इकाई/घंटा।\nशेष भरने में लगा समय = 33 / 6 = 5.5 घंटे।\nकुल समय = 3 + 5.5 = 8.5 घंटे।",
+    solution_en: "Total capacity = LCM(12, 15, 20) = 60 units. A's eff = +5, B's = +4, Leak's = -3 units/hr. In the first 3 hours, A and B fill 3 * (5+4) = 27 units. Remaining capacity = 60-27=33 units. Now the leak is present. The combined rate is 5+4-3=6 units/hr. Time for remaining part = 33/6 = 5.5 hours. Total time = 3 + 5.5 = 8.5 hours."
+  },
+  {
+    q_hi: "पाइप A एक टंकी को 10 मिनट में भरता है और पाइप B 15 मिनट में खाली कर सकता है। यदि दोनों पाइप बारी-बारी से एक-एक मिनट के लिए खोले जाते हैं, जिसकी शुरुआत A से होती है, तो टंकी को भरने में कितना समय लगेगा?",
+    q_en: "Pipe A can fill a tank in 10 minutes and pipe B can empty it in 15 minutes. If both pipes are opened on alternate minutes, starting with A, what is the time to fill the tank?",
+    options: ["29 मिनट", "30 मिनट", "31 मिनट", "32 मिनट"],
+    answer: 3,
+    solution_hi: "कुल क्षमता = LCM(10, 15) = 30 इकाई।\nA की क्षमता = +3, B की = -2 इकाई/मिनट।\n2 मिनट में (A+B) द्वारा भरा गया = 3-2 = 1 इकाई।\nअंतिम मिनट A का होना चाहिए ताकि वह टंकी को भर सके।\nहम 30 - 3 = 27 इकाई भरने तक चक्रों की गणना करते हैं।\n27 इकाई भरने में लगे चक्र = 27 / 1 = 27 चक्र।\nसमय = 27 चक्र × 2 मिनट/चक्र = 54 मिनट।\n54 मिनट के बाद 27 इकाई भरी हुई है।\n55वें मिनट में A की बारी है। वह 3 इकाई भरेगा।\nटंकी भर गई: 27 + 3 = 30 इकाई।\nकुल समय = 54 + 1 = 55 मिनट।",
+    solution_en: "Total capacity = LCM(10, 15) = 30 units. A's eff = +3, B's = -2 units/min. Work done in 2-min cycle (A then B) = 3-2=1 unit. We calculate time for 30-3=27 units. Time for 27 units = 27 cycles * 2 mins/cycle = 54 minutes. After 54 mins, 27 units are filled. On the 55th minute, it is A's turn. A fills 3 units and the tank is full (27+3=30). Total time = 54+1=55 minutes."
+  },
+  {
+    q_hi: "पाइप A और B एक टंकी को क्रमशः 12 और 16 घंटे में भर सकते हैं। दोनों पाइप एक साथ खोले जाते हैं, लेकिन टंकी में रिसाव के कारण, इसे भरने में 30 मिनट अधिक लगते हैं। यदि दोनों पाइप बंद हों, तो रिसाव अकेले टंकी को खाली करने में कितना समय लेगा?",
+    q_en: "Pipes A and B can fill a tank in 12 and 16 hours respectively. Both pipes are opened together, but due to a leak in the tank, it takes 30 minutes more to fill it. If both pipes are closed, in what time will the leak alone empty the tank?",
+    options: ["96 घंटे", "100 घंटे", "112 घंटे", "128 घंटे"],
+    answer: 1,
+    solution_hi: "कुल क्षमता = LCM(12, 16) = 48 इकाई।\nA की क्षमता = +4, B की = +3 इकाई/घंटा।\nबिना रिसाव के लगा समय = 48 / (4+3) = 48/7 घंटे।\nरिसाव के साथ लगा समय = 48/7 + 0.5 = 103/14 घंटे।\nरिसाव की क्षमता = (A+B) की क्षमता - (रिसाव के साथ संयुक्त क्षमता) = 7 - (48 / (103/14)) = 7 - 6.53 = 0.47 इकाई/घंटा।\nरिसाव को खाली करने में लगा समय = 48 / 0.47 = 102.12 घंटे।",
+    solution_en: "Total capacity = LCM(12, 16) = 48 units. A's eff = +4, B's = +3 units/hr. Time for A and B together = 48/(4+3) = 48/7 hours. With a leak, time taken is 48/7 + 0.5 hours = 103/14 hours. Combined rate with leak = 48/(103/14) = 6.53 units/hr. Leak's eff = (A+B) eff - Combined eff = 7 - 6.53 = 0.47 units/hr. Time to empty = 48/0.47 = 102.12 hours."
+  },
+  {
+    q_hi: "दो पाइप A और B एक टंकी को क्रमशः 25 और 30 मिनट में भर सकते हैं। दोनों पाइप एक साथ खोले जाते हैं। टंकी को भरने के 4 मिनट पहले A को बंद कर दिया जाता है। टंकी को पूरी तरह से भरने में कुल कितना समय लगेगा?",
+    q_en: "Two pipes A and B can fill a tank in 25 and 30 minutes respectively. Both pipes are opened together. Pipe A is closed 4 minutes before the tank is filled. What is the total time to fill the tank completely?",
+    options: ["12 मिनट", "14 मिनट", "16 मिनट", "18 मिनट"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(25, 30) = 150 इकाई।\nA की क्षमता = +6, B की = +5 इकाई/मिनट।\nमान लें टंकी को भरने में कुल t मिनट लगते हैं। अंतिम 4 मिनट में केवल B काम करता है। भरा हुआ = 4 × 5 = 20 इकाई।\nपहले (t-4) मिनट में A और B एक साथ काम करते हैं। भरा हुआ = (t-4) × (6+5) = 11(t-4) इकाई।\nकुल क्षमता = 11(t-4) + 20 = 150।\n11t - 44 + 20 = 150।\n11t = 174। t = 174/11 = 15.81 मिनट।",
+    solution_en: "Total capacity = LCM(25, 30) = 150 units. A's eff = +6, B's = +5 units/min. Let the total time be 't' minutes. In the last 4 mins, only B works, filling 4*5=20 units. In the first (t-4) mins, A and B work together, filling (t-4)*(6+5)=11(t-4) units. Total capacity = 11(t-4)+20=150. 11t-44+20=150. 11t=174. t=174/11=15.81 mins."
+  },
+  {
+    q_hi: "एक टंकी में तीन पाइप A, B, C हैं। A इसे 10 घंटे में भरता है, B इसे 12 घंटे में भरता है और C इसे 15 घंटे में खाली करता है। तीनों पाइपों को एक साथ खोला जाता है। यदि टंकी को पूरी तरह से भरने में 30 घंटे लगते हैं, तो C को कितने समय के लिए खोला गया था?",
+    q_en: "A tank has three pipes A, B, C. A fills it in 10 hours, B in 12 hours, and C empties it in 15 hours. All three pipes are opened together. If it takes 30 hours to fill the tank completely, for how much time was C kept open?",
+    options: ["10 घंटे", "15 घंटे", "20 घंटे", "25 घंटे"],
+    answer: 1,
+    solution_hi: "कुल क्षमता = LCM(10, 12, 15) = 60 इकाई।\nA की क्षमता = +6, B की = +5, C की = -4 इकाई/घंटा।\nमान लें C को x घंटे के लिए खोला गया था।\nटंकी को पूरी तरह भरने में 30 घंटे लगे। इसका मतलब A और B पूरे 30 घंटे खुले थे।\n30 घंटे में A और B द्वारा भरा गया = 30 * (6+5) = 330 इकाई।\nx घंटे में C द्वारा खाली किया गया = x * 4 = 4x इकाई।\nकुल भरा हुआ = (A+B) द्वारा भरा गया - C द्वारा खाली किया गया = 60 इकाई।\n330 - 4x = 60।\n4x = 330 - 60 = 270।\nx = 270 / 4 = 67.5 घंटे।",
+    solution_en: "Total capacity = LCM(10, 12, 15) = 60 units. A's eff = +6, B's = +5, C's = -4 units/hr. Let C be open for 'x' hours. Total time to fill is 30 hours, meaning A and B were open for all 30 hours. Filled by A and B in 30 hrs = 30 * (6+5) = 330 units. Emptied by C in x hours = x * 4 = 4x units. Total filled = 330 - 4x = 60. 4x = 270. x = 270 / 4 = 67.5 hours."
+  },
+  {
+    q_hi: "एक भरने वाला पाइप A, टंकी को 8 घंटे में भर सकता है। एक रिसाव, जो टंकी में प्रवेश करने वाले पानी का 1/3 हिस्सा बाहर निकालता है, भी मौजूद है। टंकी को भरने में कितना समय लगेगा?",
+    q_en: "A filling pipe A can fill a tank in 8 hours. A leak, which drains 1/3 of the water entering the tank, is also present. In what time will the tank be filled?",
+    options: ["10 घंटे", "12 घंटे", "15 घंटे", "18 घंटे"],
+    answer: 1,
+    solution_hi: "मान लें A की दर = 3 इकाई/घंटा।\nकुल क्षमता = 3 * 8 = 24 इकाई।\nरिसाव की दर = A की दर का 1/3 = 3 * (1/3) = 1 इकाई/घंटा।\nसंयुक्त दर (A+रिसाव) = 3 - 1 = 2 इकाई/घंटा।\nटंकी भरने में लगा समय = 24 / 2 = 12 घंटे।",
+    solution_en: "Let A's rate = 3 units/hr. Total capacity = 3*8=24 units. Leak's rate = 1/3 of A's rate = 3*(1/3)=1 unit/hr. Combined rate (A+leak) = 3-1=2 units/hr. Time to fill tank = 24/2 = 12 hours."
+  },
+  {
+    q_hi: "एक टंकी में 5 इनलेट पाइप हैं और 3 आउटलेट पाइप हैं। प्रत्येक इनलेट पाइप 20 घंटे में टंकी को भर सकता है और प्रत्येक आउटलेट पाइप 30 घंटे में खाली कर सकता है। यदि सभी पाइप एक साथ खोले जाते हैं, तो टंकी को भरने में कितना समय लगेगा?",
+    q_en: "A tank has 5 inlet pipes and 3 outlet pipes. Each inlet pipe can fill the tank in 20 hours and each outlet pipe can empty it in 30 hours. If all pipes are opened together, in what time will the tank be filled?",
+    options: ["4 घंटे", "6 घंटे", "8 घंटे", "10 घंटे"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(20, 30) = 60 इकाई।\nएक इनलेट पाइप की क्षमता = +3 इकाई/घंटा।\nएक आउटलेट पाइप की क्षमता = -2 इकाई/घंटा।\n5 इनलेट पाइपों की कुल क्षमता = 5 × 3 = 15 इकाई/घंटा।\n3 आउटलेट पाइपों की कुल क्षमता = 3 × (-2) = -6 इकाई/घंटा।\nसभी पाइपों की संयुक्त दर = 15 - 6 = 9 इकाई/घंटा।\nटंकी भरने में लगा समय = 60 / 9 = 6.66 घंटे।",
+    solution_en: "Total capacity = LCM(20, 30) = 60 units. Eff of one inlet = +3, one outlet = -2 units/hr. Total eff of 5 inlets = 5*3=15 units/hr. Total eff of 3 outlets = 3*(-2)=-6 units/hr. Combined rate = 15-6=9 units/hr. Time to fill = 60/9=6.66 hours."
+  },
+  {
+    q_hi: "दो पाइप A और B एक टंकी को क्रमशः 15 और 20 मिनट में भर सकते हैं। दोनों को एक साथ खोला जाता है, लेकिन कुछ समय बाद B को बंद कर दिया जाता है। यदि टंकी को 12 मिनट में भर दिया गया, तो B को कितने मिनट बाद बंद किया गया था?",
+    q_en: "Two pipes A and B can fill a tank in 15 and 20 minutes respectively. Both are opened together, but after some time B is closed. If the tank was filled in 12 minutes, after how many minutes was B closed?",
+    options: ["3 मिनट", "4 मिनट", "5 मिनट", "6 मिनट"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(15, 20) = 60 इकाई।\nA की क्षमता = +4, B की = +3 इकाई/मिनट।\nमान लें B को x मिनट बाद बंद किया गया था।\nA ने पूरे 12 मिनट काम किया। A द्वारा किया गया कार्य = 12 × 4 = 48 इकाई।\nशेष कार्य जो B द्वारा किया गया = 60 - 48 = 12 इकाई।\nB को काम करने में लगा समय = 12 / 3 = 4 मिनट।\nअतः B को 4 मिनट बाद बंद किया गया था।",
+    solution_en: "Total capacity = LCM(15, 20) = 60 units. A's eff = +4, B's = +3 units/min. Let B be closed after 'x' minutes. A worked for the entire 12 minutes. Work done by A = 12*4=48 units. Remaining work done by B = 60-48=12 units. Time for B = 12/3 = 4 minutes. So B was closed after 4 minutes."
+  },
+  {
+    q_hi: "दो पाइप A और B एक टंकी को क्रमशः 24 और 36 मिनट में भर सकते हैं। दोनों पाइपों को एक साथ खोला जाता है। टंकी को भरने के 6 मिनट पहले पाइप A को बंद कर दिया जाता है। टंकी को पूरी तरह से भरने में कुल कितना समय लगेगा?",
+    q_en: "Two pipes A and B can fill a tank in 24 and 36 minutes respectively. Both pipes are opened together. Pipe A is closed 6 minutes before the tank is full. What is the total time to fill the tank completely?",
+    options: ["14.4 मिनट", "16.8 मिनट", "18.4 मिनट", "20.4 मिनट"],
+    answer: 2,
+    solution_hi: "कुल क्षमता = LCM(24, 36) = 72 इकाई।\nA की क्षमता = +3, B की = +2 इकाई/मिनट।\nमान लें कुल समय t है।\nअंतिम 6 मिनट में केवल B काम करता है। भरा हुआ = 6 × 2 = 12 इकाई।\nशेष क्षमता = 72 - 12 = 60 इकाई।\nयह शेष 60 इकाई A और B ने मिलकर भरी थी।\nसंयुक्त दर = 3+2=5 इकाई/मिनट।\nसंयुक्त रूप से लगा समय = 60 / 5 = 12 मिनट।\nकुल समय = 12 + 6 = 18 मिनट।",
+    solution_en: "Total capacity = LCM(24, 36) = 72 units. A's eff = +3, B's = +2 units/min. Let total time be 't'. In the last 6 minutes, only B works, filling 6*2=12 units. Remaining capacity=72-12=60 units. This remaining part was filled by A and B together. Combined rate=3+2=5 units/min. Time for combined work = 60/5=12 minutes. Total time = 12+6=18 minutes."
+  },
+  {
+    q_hi: "एक टंकी में एक इनलेट पाइप है जो इसे 12 घंटे में भर सकता है। टंकी के तल में एक रिसाव है जो भरी हुई टंकी को 'X' घंटे में खाली कर सकता है। रिसाव के कारण, टंकी को भरने में 18 घंटे लगते हैं। यदि रिसाव की दर 20% बढ़ जाती है, तो रिसाव अकेले भरी हुई टंकी को खाली करने में कितना समय लेगा?",
+    q_en: "A tank has an inlet pipe that can fill it in 12 hours. There is a leak at the bottom of the tank that can empty a full tank in 'X' hours. Due to the leak, it takes 18 hours to fill the tank. If the leak's rate increases by 20%, in what time will the leak alone empty the full tank?",
+    options: ["18 घंटे", "20 घंटे", "24 घंटे", "30 घंटे"],
+    answer: 3,
+    solution_hi: "पाइप की दर = 1/12 भाग/घंटा।\nसंयुक्त दर (पाइप - रिसाव) = 1/18 भाग/घंटा।\nरिसाव की दर = 1/12 - 1/18 = (3-2)/36 = 1/36 भाग/घंटा।\nतो, रिसाव अकेले टंकी को 36 घंटे में खाली कर सकता है।\nअब रिसाव की दर 20% बढ़ गई। नई दर = (1/36) × (1 + 0.20) = (1/36) × 1.2 = 1.2/36 = 12/360 = 1/30 भाग/घंटा।\nनई दर से खाली करने में लगा समय = 1 / (1/30) = 30 घंटे।",
+    solution_en: "Pipe's rate = 1/12 part/hr. Combined rate (Pipe - Leak) = 1/18 part/hr. Leak's rate = 1/12-1/18 = 1/36 part/hr. So the leak alone can empty the tank in 36 hours. Now the leak rate increases by 20%. New rate = (1/36) * (1+0.2) = 1.2/36 = 1/30 part/hr. Time to empty with new rate = 1 / (1/30) = 30 hours."
+  }
+];
+
+// The rest of the script is the same as before.
+let currentQuestion = 0;
+let score = 0;
+let lang = "hi";
+let answers = new Array(questions.length).fill(null);
+let timer;
+let timeLeft = 25 * 60; // 25 minutes in seconds
+
+// Elements
+const questionContainer = document.getElementById("question-container");
+const prevBtn = document.getElementById("prev-btn");
+const nextBtn = document.getElementById("next-btn");
+const timerEl = document.getElementById("timer");
+const resultSection = document.getElementById("result-section");
+const scoreSummaryDiv = document.getElementById("score-summary");
+const analysisDiv = document.getElementById("analysis");
+const ctx = document.getElementById("resultChart").getContext("2d");
+const navigationButtons = document.getElementById("navigation-buttons");
+
+// Popup elements
+const menuToggle = document.getElementById("menu-toggle");
+const menuOverlay = document.getElementById("menu-overlay");
+const closePopup = document.getElementById("close-popup");
+const testSection = document.getElementById("test-section");
+const qNumContainer = document.getElementById("question-numbers");
+const popupSubmit = document.getElementById("popup-submit");
+const popupBack = document.getElementById("popup-back");
+
+// Tabs
+const tabCorrect = document.getElementById("tab-correct");
+const tabIncorrect = document.getElementById("tab-incorrect");
+const tabUnattempted = document.getElementById("tab-unattempted");
+let currentTab = 'correct';
+
+// Language toggle
+document.getElementById("lang-toggle").addEventListener("click", ()=>{
+  lang = lang === "hi" ? "en" : "hi";
+  document.getElementById("lang-toggle").innerText = lang === "hi" ? "English" : "हिंदी";
+  document.getElementById("mock-title").innerText = lang === "hi" ? "पाइप और टंकी मॉक टेस्ट (स्तर 6)" : "Pipe and Cistern Mock Test (Level 6)";
+  document.getElementById("menu-title").innerText = lang === "hi" ? "प्रश्न" : "Questions";
+  popupSubmit.innerText = lang === "hi" ? "सबमिट करें" : "Submit";
+  popupBack.innerText = lang === "hi" ? "वापस जाएँ" : "Back";
+  prevBtn.innerText = lang === "hi" ? "पिछला प्रश्न" : "Previous Question";
+  nextBtn.innerText = lang === "hi" ? "अगला प्रश्न" : "Next Question";
+  if(!resultSection.classList.contains("hidden")){
+    tabCorrect.innerText = lang === "hi" ? "सही" : "Correct";
+    tabIncorrect.innerText = lang === "hi" ? "गलत" : "Incorrect";
+    tabUnattempted.innerText = lang === "hi" ? "छोड़े गए" : "Unattempted";
+    showResult(currentTab);
+  }
+  loadQuestion();
+});
+
+// Timer
+function startTimer(){
+  timer = setInterval(()=>{
+    timeLeft--;
+    let min = String(Math.floor(timeLeft/60)).padStart(2,"0");
+    let sec = String(timeLeft%60).padStart(2,"0");
+    timerEl.innerText = `${lang==="hi"?"समय":"Time"}: ${min}:${sec}`;
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      endTest();
+    }
+  },1000);
+}
+
+// Load Question
+function loadQuestion(){
+  let q = questions[currentQuestion];
+  questionContainer.innerHTML = `
+    <div class="question-card">
+      <h3>${(currentQuestion+1)}. ${lang==="hi"?q.q_hi:q.q_en}</h3>
+      ${q.options.map((opt,i)=>`
+        <button class="option-btn ${answers[currentQuestion]===i?"selected":""}" onclick="selectOption(${i})">${opt}</button>
+      `).join("")}
+    </div>
+  `;
+  renderQNumbers();
+  updateNavigationButtons();
+}
+
+// Select Option
+function selectOption(i){
+  answers[currentQuestion] = i;
+  loadQuestion();
+}
+
+// Navigation buttons logic
+function updateNavigationButtons() {
+    if (currentQuestion === 0) {
+        prevBtn.style.visibility = 'hidden';
+    } else {
+        prevBtn.style.visibility = 'visible';
+    }
+
+    if (currentQuestion === questions.length - 1) {
+        nextBtn.innerText = lang === "hi" ? "टेस्ट सबमिट करें" : "Submit Test";
+        nextBtn.classList.remove("btn");
+        nextBtn.classList.add("btn-grey");
+    } else {
+        nextBtn.innerText = lang === "hi" ? "अगला प्रश्न" : "Next Question";
+        nextBtn.classList.add("btn");
+        nextBtn.classList.remove("btn-grey");
+    }
+}
+
+prevBtn.addEventListener("click", ()=>{
+  if(currentQuestion > 0){
+    currentQuestion--;
+    loadQuestion();
+  }
+});
+
+nextBtn.addEventListener("click", ()=>{
+  if(currentQuestion < questions.length-1){
+    currentQuestion++;
+    loadQuestion();
+  } else {
+    endTest();
+  }
+});
+
+// End Test
+function endTest(){
+  clearInterval(timer);
+  document.getElementById("test-section").classList.add("hidden");
+  resultSection.classList.remove("hidden");
+  showResult('correct');
+}
+
+// Show Result
+function showResult(filter){
+  currentTab = filter;
+  let correct=0,incorrect=0,unattempted=0;
+  questions.forEach((q,i)=>{
+    if(answers[i]==null){unattempted++;}
+    else if(answers[i]===q.answer){correct++;}
+    else{incorrect++;}
+  });
+
+  const totalAttempted = correct + incorrect;
+  const accuracy = totalAttempted > 0 ? ((correct / totalAttempted) * 100).toFixed(2) : 0;
+
+  scoreSummaryDiv.innerHTML = `
+    <p style="font-size:1.2em; font-weight:bold;">${lang==="hi"?"स्कोर":"Score"}: ${correct} / ${questions.length}</p>
+    <p>${lang==="hi"?"सही":"Correct"}: <strong>${correct}</strong></p>
+    <p>${lang==="hi"?"गलत":"Incorrect"}: <strong>${incorrect}</strong></p>
+    <p>${lang==="hi"?"छोड़े गए":"Unattempted"}: <strong>${unattempted}</strong></p>
+    <p>${lang==="hi"?"एक्यूरेसी":"Accuracy"}: <strong>${accuracy}%</strong></p>
+  `;
+
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(`tab-${filter}`).classList.add('active');
+
+  analysisDiv.innerHTML = "";
+  let filteredQuestions = [];
+  if(filter === 'correct'){
+    filteredQuestions = questions.filter((q, i) => answers[i] === q.answer);
+  } else if (filter === 'incorrect'){
+    filteredQuestions = questions.filter((q, i) => answers[i] !== null && answers[i] !== q.answer);
+  } else if (filter === 'unattempted'){
+    filteredQuestions = questions.filter((q, i) => answers[i] === null);
+  }
+
+  filteredQuestions.forEach(q => {
+    let qIndex = questions.indexOf(q);
+    let isCorrect = answers[qIndex] === q.answer;
+    let cardClass = isCorrect ? 'correct' : (answers[qIndex] === null ? 'unattempted' : 'incorrect');
+
+    analysisDiv.innerHTML += `
+      <div class="question-card ${cardClass}">
+        <h3>${qIndex+1}. ${lang==="hi"?q.q_hi:q.q_en}</h3>
+        ${q.options.map((opt,i)=>`
+          <button class="option-btn ${i===q.answer?'correct':(i===answers[qIndex]?'incorrect':'')}" disabled>${opt}</button>
+        `).join("")}
+        <br>
+        <div style="font-weight:bold;">${lang==="hi"?"सही उत्तर":"Correct Answer"}: ${q.options[q.answer]}</div>
+        <div style="margin-top:10px;">
+          <strong>${lang==="hi"?"समाधान":"Solution"}:</strong>
+          <pre>${lang==="hi"?q.solution_hi:q.solution_en}</pre>
+        </div>
+      </div>
+    `;
+  });
+
+  // Chart
+  new Chart(ctx,{
+    type:'pie',
+    data:{
+      labels:[lang==="hi"?"सही":"Correct",lang==="hi"?"गलत":"Incorrect",lang==="hi"?"छोड़े गए":"Unattempted"],
+      datasets:[{
+        data:[correct,incorrect,unattempted],
+        backgroundColor:['#22c55e','#ff4d4d','#3399ff']
+      }]
+    },
+    options:{responsive:true, maintainAspectRatio:false}
+  });
+}
+
+// Event listeners for result tabs
+tabCorrect.addEventListener("click", () => showResult('correct'));
+tabIncorrect.addEventListener("click", () => showResult('incorrect'));
+tabUnattempted.addEventListener("click", () => showResult('unattempted'));
+
+
+// Render Question Numbers inside Popup
+function renderQNumbers(){
+  qNumContainer.innerHTML = "";
+  questions.forEach((q,i)=>{
+    let status="unattempted";
+    if(answers[i]!=null) status="attempted";
+    if(i===currentQuestion) status="current";
+    let div = document.createElement("div");
+    div.className="question-num "+status;
+    div.innerHTML = (i+1);
+    div.onclick=()=>{currentQuestion=i; loadQuestion(); closeMenu();};
+    qNumContainer.appendChild(div);
+  });
+}
+
+// Popup toggle
+menuToggle.addEventListener("click", ()=>{
+  menuOverlay.classList.add("active");
+  testSection.classList.add("blur");
+  renderQNumbers();
+});
+closePopup.addEventListener("click", closeMenu);
+popupBack.addEventListener("click", closeMenu);
+function closeMenu(){
+  menuOverlay.classList.remove("active");
+  testSection.classList.remove("blur");
+}
+popupSubmit.addEventListener("click", ()=>{
+  closeMenu();
+  endTest();
+});
+
+// Initial load
+startTimer();
+loadQuestion();
+</script>
+</body>
+</html>
