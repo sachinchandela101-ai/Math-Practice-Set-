@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     _bannerAd = BannerAd(
-      adUnitId: "ca-app-pub-XXXXXXXXXXXXXXXX/BBBBBBBBBB", // <-- यहां अपनी Banner Ad Unit ID डालो
+      adUnitId: "ca-app-pub-8223246456088610~4153228652", // <-- यहां अपनी Banner Ad Unit ID डालो
       request: AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
@@ -63,7 +63,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Expanded(
             child: WebView(
-              initialUrl: "https://yourusername.github.io/yourrepo/", // <-- यहां अपना GitHub Pages URL डालो
+              initialUrl: "https://sachinchandela101-ai.github.io/Math-Practice-Set-/", // <-- यहां अपना GitHub Pages URL डालो
               javascriptMode: JavascriptMode.unrestricted,
             ),
           ),
