@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="गणित के विभिन्न अध्यायों के लिए मॉक टेस्ट की तैयारी करें। अंकगणित और एडवांस गणित के सभी विषयों के लिए अभ्यास करें।">
+<title>गणित मॉक टेस्ट 🎯</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    :root {
+        --primary-color: #0d47a1;
+        --secondary-color: #1976d2;
+        --tertiary-color: #4fc3f7;
+        --background-color: #f4f6f9;
+        --text-color: #263238;
+        --heading-bg-color: #37474f;
+        --card-bg-color: #ffffff;
+        --box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        --hover-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    }
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: var(--background-color);
+        margin: 0;
+        padding: 0;
+        color: var(--text-color);
+        line-height: 1.6;
+    }
+    header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: #fff;
+        padding: 3rem 1rem;
+        text-align: center;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+    header p {
+        font-size: 1.1rem;
+        margin-top: 0.5rem;
+    }
+    .container {
+        padding: 1.5rem 1rem;
+        max-width: 1200px;
+        margin: auto;
+    }
+    .section h2 {
+        background: var(--heading-bg-color);
+        color: #fff;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin-top: 2.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .section h2 i {
+        margin-right: 10px;
+        font-size: 1.2em;
+    }
+    .chapters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    /* Chapter card is now a button-like element */
+    .chapter {
+        background: var(--card-bg-color);
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: var(--box-shadow);
+        border-left: 6px solid var(--secondary-color);
+        transition: all 0.4s ease;
+        cursor: pointer; /* Pointer to indicate clickable */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .chapter:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--hover-shadow);
+        border-left-color: var(--primary-color);
+    }
+    .chapter h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.4rem;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between; /* New: To position the indicator arrow */
+    }
+    .chapter h3 span {
+        margin-right: 10px;
+        font-size: 1.2em;
+    }
+    /* New: Indicator Arrow Style */
+    .chapter-indicator {
+        transition: transform 0.3s ease;
+        font-size: 1.2rem;
+        color: var(--secondary-color);
+    }
+    .chapter[data-open="true"] .chapter-indicator {
+        transform: rotate(180deg); /* Arrow turns up when open */
+        color: var(--primary-color);
+    }
+    .chapter p {
+        margin-bottom: 1rem;
+        color: #546e7a;
+    }
+    
+    /* Initially hide the test buttons section */
+    .test-buttons-container {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eceff1;
+        display: none; /* Hide by default */
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    /* Style for the buttons */
+    .test-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 0.7rem;
+    }
+    .test-buttons a {
+        text-decoration: none;
+        display: block;
+    }
+    .test-buttons button {
+        width: 100%;
+        padding: 0.8rem 0.5rem;
+        background-color: var(--tertiary-color);
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .test-buttons button:hover {
+        background-color: var(--primary-color);
+        color: #fff;
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Animation for showing buttons */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Active state for buttons container */
+    .test-buttons-container.active {
+        display: block;
+    }
+
+    /* Full Test Button Style */
+    .full-test-button {
+        text-align: center;
+        margin: 3rem 0;
+    }
+    .full-test-button button {
+        padding: 1rem 2rem;
+        background-color: #e53935;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(229, 57, 53, 0.4);
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    .full-test-button button:hover {
+        background-color: #c62828;
+        transform: scale(1.02);
+    }
+
+    footer {
+        text-align: center;
+        padding: 2rem;
+        margin-top: 3rem;
+        background-color: #37474f;
+        color: #cfd8dc;
+        font-size: 0.9rem;
+    }
+    footer a {
+        color: var(--tertiary-color);
+        text-decoration: none;
+    }
+    footer a:hover {
+        text-decoration: underline;
+    }
+    .owner-info {
+        display: block;
+        margin-top: 5px;
+        color: #b0bec5;
+    }
+    .owner-info a {
+        color: #cfd8dc;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .owner-info a:hover {
+        text-decoration: underline;
+    }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><i class="fas fa-calculator"></i> गणित अध्यायवार मॉक टेस्ट</h1>
+  <p>अपनी तैयारी को परखें और हर अध्याय में **महारत हासिल** करें। 🚀</p>
+</header>
+
+<div class="container">
+  
+  <div class="section">
+    <h2><i class="fas fa-chart-line"></i> अंकगणित (Arithmetic)</h2>
+    
+    <div class="chapters-grid">
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="clock">⏱️</span> कार्य और समय (Time & Work)
+                    <i class="fas fa-chevron-down chapter-indicator"></i> 
+                </h3>
+                <p>इस अध्याय में दक्षता, कार्य क्षमता और समय-आधारित प्रश्न हल करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="tw1.html"><button>Mock 1</button></a>
+                    <a href="tw2.html"><button>Mock 2</button></a>
+                    <a href="tw3.html"><button>Mock 3</button></a>
+                    <a href="tw4.html"><button>Mock 4</button></a>
+                    <a href="tw5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="pipe">💧</span> पाइप और टंकी (Pipes & Cisterns)
+                    <i class="fas fa-chevron-down chapter-indicator"></i> 
+                </h3>
+                <p>भरने और खाली करने वाली पाइपों पर आधारित प्रश्नों का अभ्यास करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="pipe1.html"><button>Mock 1</button></a>
+                    <a href="pipe2.html"><button>Mock 2</button></a>
+                    <a href="pipe3.html"><button>Mock 3</button></a>
+                    <a href="pipe4.html"><button>Mock 4</button></a>
+                    <a href="pipe5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="car">🚗</span> समय और दूरी (Time, Speed & Distance)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>ट्रेन और गति से संबंधित प्रश्नों को हल करने के लिए खुद को चुनौती दें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="tsd1.html"><button>Mock 1</button></a>
+                    <a href="tsd2.html"><button>Mock 2</button></a>
+                    <a href="tsd3.html"><button>Mock 3</button></a>
+                    <a href="tsd4.html"><button>Mock 4</button></a>
+                    <a href="tsd5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="boat">🛶</span> नाव और धारा (Boats & Streams)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>धारा के अनुकूल और प्रतिकूल गति से संबंधित प्रश्नों का अभ्यास करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="boat1.html"><button>Mock 1</button></a>
+                    <a href="boat2.html"><button>Mock 2</button></a>
+                    <a href="boat3.html"><button>Mock 3</button></a>
+                    <a href="boat4.html"><button>Mock 4</button></a>
+                    <a href="boat5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="percent">%</span> प्रतिशतता (Percentage)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>दैनिक जीवन से जुड़ी प्रतिशत समस्याओं को हल करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="per1.html"><button>Mock 1</button></a>
+                    <a href="per2.html"><button>Mock 2</button></a>
+                    <a href="per3.html"><button>Mock 3</button></a>
+                    <a href="per4.html"><button>Mock 4</button></a>
+                    <a href="per5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="money bag">💰</span> लाभ और हानि (Profit & Loss)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>खरीद, बिक्री और छूट के प्रश्नों का अभ्यास करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="pl1.html"><button>Mock 1</button></a>
+                    <a href="pl2.html"><button>Mock 2</button></a>
+                    <a href="pl3.html"><button>Mock 3</button></a>
+                    <a href="pl4.html"><button>Mock 4</button></a>
+                    <a href="pl5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="beaker">🧪</span> मिश्रण (Mixture)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>विभिन्न वस्तुओं को मिलाने पर आधारित समस्याओं को हल करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="mix1.html"><button>Mock 1</button></a>
+                    <a href="mix2.html"><button>Mock 2</button></a>
+                    <a href="mix3.html"><button>Mock 3</button></a>
+                    <a href="mix4.html"><button>Mock 4</button></a>
+                    <a href="mix5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="balance scale">⚖️</span> अनुपात एवं समानुपात (Ratio & Proportion)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>संबंधित मात्राओं और अनुपातों को समझें और गणना करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="rp1.html"><button>Mock 1</button></a>
+                    <a href="rp2.html"><button>Mock 2</button></a>
+                    <a href="rp3.html"><button>Mock 3</button></a>
+                    <a href="rp4.html"><button>Mock 4</button></a>
+                    <a href="rp5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="handshake">🤝</span> साझेदारी (Partnership)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>लाभ और निवेश के अनुपात पर आधारित प्रश्नों को हल करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="part1.html"><button>Mock 1</button></a>
+                    <a href="part2.html"><button>Mock 2</button></a>
+                    <a href="part3.html"><button>Mock 3</button></a>
+                    <a href="part4.html"><button>Mock 4</button></a>
+                    <a href="part5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="abacus">🧮</span> औसत (Average)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>संख्याओं के औसत से संबंधित प्रश्नों को हल करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="avg1.html"><button>Mock 1</button></a>
+                    <a href="avg2.html"><button>Mock 2</button></a>
+                    <a href="avg3.html"><button>Mock 3</button></a>
+                    <a href="avg4.html"><button>Mock 4</button></a>
+                    <a href="avg5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="growing chart">📈</span> चक्रवृद्धि ब्याज (Compound Interest)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>मूलधन और ब्याज की गणना के प्रश्नों का अभ्यास करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="ci1.html"><button>Mock 1</button></a>
+                    <a href="ci2.html"><button>Mock 2</button></a>
+                    <a href="ci3.html"><button>Mock 3</button></a>
+                    <a href="ci4.html"><button>Mock 4</button></a>
+                    <a href="ci5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="currency exchange">💵</span> साधारण ब्याज (Simple Interest)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>साधारण ब्याज की गणना पर आधारित प्रश्नों का अभ्यास करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="si1.html"><button>Mock 1</button></a>
+                    <a href="si2.html"><button>Mock 2</button></a>
+                    <a href="si3.html"><button>Mock 3</button></a>
+                    <a href="si4.html"><button>Mock 4</button></a>
+                    <a href="si5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    </div> </div> <div class="full-test-button">
+    <a href="arithmetic_full.html">
+        <button><i class="fas fa-arrow-alt-circle-right"></i> संपूर्ण अंकगणित मॉक टेस्ट (25 प्रश्न)</button>
+    </a>
+  </div>
+
+  <div class="section">
+    <h2><i class="fas fa-cube"></i> एडवांस गणित (Advanced Mathematics)</h2>
+    
+    <div class="chapters-grid">
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="triangle">📐</span> त्रिकोणमिति (Trigonometry)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>ऊंचाई, दूरी और त्रिकोणमितीय अनुपातों पर आधारित प्रश्नों का अभ्यास करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="trig1.html"><button>Mock 1</button></a>
+                    <a href="trig2.html"><button>Mock 2</button></a>
+                    <a href="trig3.html"><button>Mock 3</button></a>
+                    <a href="trig4.html"><button>Mock 4</button></a>
+                    <a href="trig5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="compass">🌐</span> ज्यामिति (Geometry)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>रेखाएं, कोण, त्रिभुज और वृत्त (Circles) से संबंधित प्रश्नों को हल करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="geo1.html"><button>Mock 1</button></a>
+                    <a href="geo2.html"><button>Mock 2</button></a>
+                    <a href="geo3.html"><button>Mock 3</button></a>
+                    <a href="geo4.html"><button>Mock 4</button></a>
+                    <a href="geo5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="equation">🟰</span> बीजगणित (Algebra)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>बहुपद, समीकरण और बीजगणितीय सर्वसमिकाओं का अभ्यास करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="alg1.html"><button>Mock 1</button></a>
+                    <a href="alg2.html"><button>Mock 2</button></a>
+                    <a href="alg3.html"><button>Mock 3</button></a>
+                    <a href="alg4.html"><button>Mock 4</button></a>
+                    <a href="alg5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="chapter" onclick="toggleTests(this)" data-open="false">
+            <div>
+                <h3>
+                    <span role="img" aria-label="ruler">📏</span> क्षेत्रमिति (Mensuration)
+                    <i class="fas fa-chevron-down chapter-indicator"></i>
+                </h3>
+                <p>2D और 3D आकृतियों के क्षेत्रफल और आयतन की गणना करें।</p>
+            </div>
+            <div class="test-buttons-container">
+                <div class="test-buttons">
+                    <a href="men1.html"><button>Mock 1</button></a>
+                    <a href="men2.html"><button>Mock 2</button></a>
+                    <a href="men3.html"><button>Mock 3</button></a>
+                    <a href="men4.html"><button>Mock 4</button></a>
+                    <a href="men5.html"><button>Mock 5</button></a>
+                </div>
+            </div>
+        </div>
+    </div> </div> </div> <footer>
+    <p>© 2025 Math Mock Test App. All Rights Reserved. | <a href="#">गोपनीयता नीति</a></p>
+    <span class="owner-info">Owner By **Sachin Gurjar** | <a href="mailto:sachinchandela101@gmail.com">sachinchandela101@gmail.com</a></span>
+</footer>
+
+<script>
+    function toggleTests(chapterElement) {
+        const testContainer = chapterElement.querySelector('.test-buttons-container');
+        const isActive = testContainer.classList.contains('active');
+        
+        // Hide all test buttons and reset data-open attribute on all chapters
+        document.querySelectorAll('.chapter').forEach(chapter => {
+            chapter.querySelector('.test-buttons-container').classList.remove('active');
+            chapter.setAttribute('data-open', 'false'); // Reset indicator (arrow down)
+        });
+        
+        // If it was not active, show the clicked chapter's tests and set data-open
+        if (!isActive) {
+            testContainer.classList.add('active');
+            chapterElement.setAttribute('data-open', 'true'); // Set indicator (arrow up)
+        }
+
+        // Scroll to the element for better visibility on click
+        chapterElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Service Worker को रजिस्टर करने का कोड
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => {
+            console.log('Service Worker registered. Scope:', reg.scope);
+          })
+          .catch((error) => {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    }
+</script>
+</body>
+</html>
